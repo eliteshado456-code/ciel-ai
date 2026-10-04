@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-import google.generativeai as genai
+from huggingface_hub import InferenceClient
 from gtts import gTTS
 from PIL import Image
 import PyPDF2
@@ -19,25 +19,17 @@ except FileNotFoundError:
 st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
 
 # ==========================================
-# CONEXIÓN A GOOGLE GEMINI API (DIRECTA)
+# CONEXIÓN A HUGGING FACE API (INFERENCE CLIENT)
 # ==========================================
-gemini_key = os.environ.get("GEMINI_API_KEY")
+# Acepta tanto HUGGINGFACE_API_KEY como HF_TOKEN
+hf_token = os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
 
-if gemini_key:
-    genai.configure(api_key=gemini_key)
-    generation_config = {"temperature": 0.7}
-    system_instruction_ciel = (
-        "Eres Ciel, un tutor académico amigable, paciente y empático. "
-        "Guía a los estudiantes mediante explicaciones claras. "
-        "Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
-    )
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        generation_config=generation_config,
-        system_instruction=system_instruction_ciel
-    )
+if hf_token:
+    # Usamos un modelo rápido, potente y gratuito en el servidor de Hugging Face
+    client = InferenceClient(api_key=hf_token)
+    MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 else:
-    model = None
+    client = None
 
 # ==========================================
 # CSS PERSONALIZADO
@@ -100,7 +92,7 @@ if isinstance(icono_ciel, Image.Image):
     st.sidebar.image(icono_ciel)
 
 st.sidebar.title("🌟 Ciel AI")
-st.sidebar.markdown("Tu espacio de estudio inteligente.")
+st.sidebar.markdown("Tu espacio de estudio inteligente (vía Hugging Face).")
 
 modo = st.sidebar.radio("Elige un modo:", [
     "🤖 Modo IA (Tutor)", 
@@ -124,24 +116,35 @@ def hablar_con_ciel(texto):
     except Exception as e:
         pass
 
-def consultar_gemini_chat(mensajes_streamlit):
-    if not model:
-        return "⚠️ Falta configurar el GEMINI_API_KEY en Render."
+def consultar_huggingface(mensajes_streamlit):
+    if not client:
+        return "⚠️ Falta configurar el token de Hugging Face en las variables de entorno de Render (`HUGGINGFACE_API_KEY`)."
     
-    historial = []
-    for msg in mensajes_streamlit[:-1]:
-        rol = "user" if msg["role"] == "user" else "model"
-        historial.append({"role": rol, "parts": [msg["content"]]})
+    # Inyectar instrucción de sistema como primer mensaje de contexto
+    mensajes_completos = [
+        {
+            "role": "system", 
+            "content": "Eres Ciel, un tutor académico amigable, paciente y empático. Guía a los estudiantes mediante explicaciones claras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+        }
+    ]
     
-    chat = model.start_chat(history=historial)
-    response = chat.send_message(mensajes_streamlit[-1]["content"])
-    return response.text
+    for msg in mensajes_streamlit:
+        mensajes_completos.append({"role": msg["role"], "content": msg["content"]})
+    
+    try:
+        response = client.chat_completion(
+            model=MODEL_NAME,
+            messages=mensajes_completos,
+            temperature=0.7,
+            max_tokens=1024
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"⚠️ Error al conectar con Hugging Face: {e}"
 
-def consultar_gemini_prompt(prompt_texto):
-    if not model:
-        return "⚠️ Falta configurar el GEMINI_API_KEY en Render."
-    response = model.generate_content(prompt_texto)
-    return response.text
+def consultar_hf_prompt(prompt_texto):
+    mensajes_temp = [{"role": "user", "content": prompt_texto}]
+    return consultar_huggingface(mensajes_temp)
 
 # ==========================================
 # 1. MODO IA (Tutor Conversacional)
@@ -165,7 +168,7 @@ if modo == "🤖 Modo IA (Tutor)":
         with st.chat_message("assistant", avatar=icono_ciel):
             with st.spinner("Ciel está pensando..."):
                 try:
-                    respuesta_texto = consultar_gemini_chat(st.session_state.messages)
+                    respuesta_texto = consultar_huggingface(st.session_state.messages)
                     st.markdown(respuesta_texto)
                     st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
                     
@@ -191,7 +194,7 @@ elif modo == "📅 Modo Plan de Estudio":
         if materia:
             with st.spinner("Ciel está estructurando tu calendario..."):
                 prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
-                respuesta = consultar_gemini_prompt(prompt_plan)
+                respuesta = consultar_hf_prompt(prompt_plan)
                 st.markdown(respuesta)
         else:
             st.warning("Ingresa la materia.")
@@ -219,9 +222,9 @@ elif modo == "📄 Modo Lector de Documentos":
                         elif uploaded_file.name.endswith('.txt'):
                             texto_extraido = str(uploaded_file.read(), "utf-8")
                         
-                        texto_corto = texto_extraido[:15000]
+                        texto_corto = texto_extraido[:12000]
                         prompt_doc = f"Basado en este documento:\n{texto_corto}\n\nResponde: {pregunta_doc}"
-                        respuesta = consultar_gemini_prompt(prompt_doc)
+                        respuesta = consultar_hf_prompt(prompt_doc)
                         st.markdown("### 💡 Respuesta de Ciel:")
                         st.markdown(respuesta)
                     except Exception as e:
@@ -247,7 +250,7 @@ elif modo == "📝 Modo Creador de Exámenes":
         if tema_examen:
             with st.spinner("Ciel está redactando las preguntas..."):
                 prompt_examen = f"Crea un examen de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' (Dificultad: {dificultad}). Pon las preguntas primero y al final las respuestas."
-                respuesta = consultar_gemini_prompt(prompt_examen)
+                respuesta = consultar_hf_prompt(prompt_examen)
                 st.markdown("### 📝 Tu Examen:")
                 st.markdown(respuesta)
         else:
