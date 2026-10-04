@@ -1,6 +1,5 @@
 streamlit
-huggingface_hub
+google-generativeai
 gTTS
 pillow
 PyPDF2
-requests
