@@ -32,7 +32,7 @@ if gemini_key:
         "Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
     )
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="models/gemini-1.5-flash-latest",
         generation_config=generation_config,
         system_instruction=system_instruction_ciel
     )
@@ -252,4 +252,3 @@ elif modo == "📝 Modo Creador de Exámenes":
                 st.markdown(respuesta)
         else:
             st.warning("¡Necesito saber el tema!")
-                
