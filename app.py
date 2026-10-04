@@ -123,7 +123,7 @@ def consultar_openrouter(mensajes):
         return "⚠️ Falta configurar el OPENROUTER_API_KEY en Render."
     
     completion = client.chat.completions.create(
-        model="meta-llama/llama-3-8b-instruct:free",  # Usamos un modelo gratuito y sumamente veloz
+        model="deepseek/deepseek-chat:free",  # Modelo gratuito y altamente veloz en OpenRouter
         messages=mensajes,
         temperature=0.7
     )
