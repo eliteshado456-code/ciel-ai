@@ -123,7 +123,7 @@ def consultar_openrouter(mensajes):
         return "⚠️ Falta configurar el OPENROUTER_API_KEY en Render."
     
     completion = client.chat.completions.create(
-        model="meta-llama/llama-3.2-3b-instruct:free",
+        model="google/gemini-flash-1.5",
         messages=mensajes,
         temperature=0.7
     )
