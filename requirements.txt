@@ -3,3 +3,4 @@ huggingface_hub
 gTTS
 pillow
 PyPDF2
+requests
