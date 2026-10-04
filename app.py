@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-import requests
+from openai import OpenAI
 from gtts import gTTS
 from PIL import Image
 import PyPDF2
@@ -19,11 +19,13 @@ except FileNotFoundError:
 st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
 
 # ==========================================
-# CONEXIÓN A HUGGING FACE API
+# CONEXIÓN A OPENROUTER API
 # ==========================================
-hf_token = os.environ.get("HF_TOKEN")
-API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
-headers = {"Authorization": f"Bearer {hf_token}"} if hf_token else {}
+openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=openrouter_key,
+) if openrouter_key else None
 
 # ==========================================
 # CSS PERSONALIZADO
@@ -116,28 +118,16 @@ system_instruction_ciel = (
     "Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
 )
 
-def consultar_ia(prompt_usuario):
-    if not hf_token:
-        return "⚠️ Falta configurar el HF_TOKEN en Render."
+def consultar_openrouter(mensajes):
+    if not client:
+        return "⚠️ Falta configurar el OPENROUTER_API_KEY en Render."
     
-    payload = {
-        "inputs": f"<|system|>\n{system_instruction_ciel}\n<|user|>\n{prompt_usuario}\n<|assistant|>",
-        "parameters": {"max_new_tokens": 800, "temperature": 0.7}
-    }
-    
-    response = requests.post(API_URL, headers=headers, json=payload)
-    if response.status_code == 200:
-        resultado = response.json()
-        if isinstance(resultado, list) and len(resultado) > 0:
-            texto_generado = resultado[0].get("generated_text", "")
-            # Limpiamos el prompt para dejar solo la respuesta del asistente
-            if "<|assistant|>" in texto_generado:
-                texto_generado = texto_generado.split("<|assistant|>")[-1]
-            return texto_generado.strip()
-    elif response.status_code == 503:
-        return "⏳ El modelo se está despertando en los servidores. Por favor, intenta de nuevo en 30 segundos. 🌟"
-    
-    return f"⚠️ Error en la respuesta (Código {response.status_code}): {response.text}"
+    completion = client.chat.completions.create(
+        model="meta-llama/llama-3-8b-instruct:free",  # Usamos un modelo gratuito y sumamente veloz
+        messages=mensajes,
+        temperature=0.7
+    )
+    return completion.choices[0].message.content
 
 # ==========================================
 # 1. MODO IA (Tutor Conversacional)
@@ -160,12 +150,18 @@ if modo == "🤖 Modo IA (Tutor)":
 
         with st.chat_message("assistant", avatar=icono_ciel):
             with st.spinner("Ciel está pensando..."):
-                respuesta_texto = consultar_ia(prompt)
-                st.markdown(respuesta_texto)
-                st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
-                
-                if activar_voz and "⚠️" not in respuesta_texto and "⏳" not in respuesta_texto:
-                    hablar_con_ciel(respuesta_texto)
+                try:
+                    mensajes_api = [{"role": "system", "content": system_instruction_ciel}]
+                    mensajes_api.extend(st.session_state.messages)
+                    
+                    respuesta_texto = consultar_openrouter(mensajes_api)
+                    st.markdown(respuesta_texto)
+                    st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
+                    
+                    if activar_voz:
+                        hablar_con_ciel(respuesta_texto)
+                except Exception as e:
+                    st.error(f"⚠️ Error: {e}")
 
 # ==========================================
 # 2. MODO PLAN DE ESTUDIO
@@ -184,7 +180,11 @@ elif modo == "📅 Modo Plan de Estudio":
         if materia:
             with st.spinner("Ciel está estructurando tu calendario..."):
                 prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
-                respuesta = consultar_ia(prompt_plan)
+                mensajes = [
+                    {"role": "system", "content": system_instruction_ciel},
+                    {"role": "user", "content": prompt_plan}
+                ]
+                respuesta = consultar_openrouter(mensajes)
                 st.markdown(respuesta)
         else:
             st.warning("Ingresa la materia.")
@@ -212,9 +212,13 @@ elif modo == "📄 Modo Lector de Documentos":
                         elif uploaded_file.name.endswith('.txt'):
                             texto_extraido = str(uploaded_file.read(), "utf-8")
                         
-                        texto_corto = texto_extraido[:12000]
+                        texto_corto = texto_extraido[:15000]
                         prompt_doc = f"Basado en este documento:\n{texto_corto}\n\nResponde: {pregunta_doc}"
-                        respuesta = consultar_ia(prompt_doc)
+                        mensajes = [
+                            {"role": "system", "content": system_instruction_ciel},
+                            {"role": "user", "content": prompt_doc}
+                        ]
+                        respuesta = consultar_openrouter(mensajes)
                         st.markdown("### 💡 Respuesta de Ciel:")
                         st.markdown(respuesta)
                     except Exception as e:
@@ -240,7 +244,11 @@ elif modo == "📝 Modo Creador de Exámenes":
         if tema_examen:
             with st.spinner("Ciel está redactando las preguntas..."):
                 prompt_examen = f"Crea un examen de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' (Dificultad: {dificultad}). Pon las preguntas primero y al final las respuestas."
-                respuesta = consultar_ia(prompt_examen)
+                mensajes = [
+                    {"role": "system", "content": system_instruction_ciel},
+                    {"role": "user", "content": prompt_examen}
+                ]
+                respuesta = consultar_openrouter(mensajes)
                 st.markdown("### 📝 Tu Examen:")
                 st.markdown(respuesta)
         else:
