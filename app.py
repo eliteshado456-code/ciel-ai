@@ -1,8 +1,9 @@
 import streamlit as st
 import os
-import google.generativeai as genai
+import requests
 from gtts import gTTS
 from PIL import Image
+import PyPDF2
 
 # ==========================================
 # CONFIGURACIÓN DE PÁGINA E ÍCONO
@@ -18,13 +19,11 @@ except FileNotFoundError:
 st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
 
 # ==========================================
-# CONEXIÓN SEGURA A LA API DE GOOGLE
+# CONEXIÓN A HUGGING FACE API
 # ==========================================
-api_key = os.environ.get("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
-else:
-    st.error("⚠️ Falla de seguridad: No se encontró la GEMINI_API_KEY en Render.")
+hf_token = os.environ.get("HF_TOKEN")
+API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
+headers = {"Authorization": f"Bearer {hf_token}"} if hf_token else {}
 
 # ==========================================
 # CSS PERSONALIZADO
@@ -81,10 +80,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# BARRA LATERAL (Menú e Imagen de Ciel)
+# BARRA LATERAL
 # ==========================================
 if isinstance(icono_ciel, Image.Image):
-    # CORRECCIÓN AQUÍ: Quitamos el use_container_width que daba error en los logs
     st.sidebar.image(icono_ciel)
 
 st.sidebar.title("🌟 Ciel AI")
@@ -118,10 +116,28 @@ system_instruction_ciel = (
     "Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
 )
 
-modelo_base = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
-    system_instruction=system_instruction_ciel
-)
+def consultar_ia(prompt_usuario):
+    if not hf_token:
+        return "⚠️ Falta configurar el HF_TOKEN en Render."
+    
+    payload = {
+        "inputs": f"<|system|>\n{system_instruction_ciel}\n<|user|>\n{prompt_usuario}\n<|assistant|>",
+        "parameters": {"max_new_tokens": 800, "temperature": 0.7}
+    }
+    
+    response = requests.post(API_URL, headers=headers, json=payload)
+    if response.status_code == 200:
+        resultado = response.json()
+        if isinstance(resultado, list) and len(resultado) > 0:
+            texto_generado = resultado[0].get("generated_text", "")
+            # Limpiamos el prompt para dejar solo la respuesta del asistente
+            if "<|assistant|>" in texto_generado:
+                texto_generado = texto_generado.split("<|assistant|>")[-1]
+            return texto_generado.strip()
+    elif response.status_code == 503:
+        return "⏳ El modelo se está despertando en los servidores. Por favor, intenta de nuevo en 30 segundos. 🌟"
+    
+    return f"⚠️ Error en la respuesta (Código {response.status_code}): {response.text}"
 
 # ==========================================
 # 1. MODO IA (Tutor Conversacional)
@@ -129,29 +145,27 @@ modelo_base = genai.GenerativeModel(
 if modo == "🤖 Modo IA (Tutor)":
     st.title("Hola, soy Ciel 👋")
     
-    if "chat_session" not in st.session_state:
-        st.session_state.chat_session = modelo_base.start_chat(history=[])
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-    for message in st.session_state.chat_session.history:
-        role = "assistant" if message.role == "model" else "user"
-        avatar_a_usar = icono_ciel if role == "assistant" else "👤"
-        with st.chat_message(role, avatar=avatar_a_usar):
-            st.markdown(message.parts[0].text)
+    for msg in st.session_state.messages:
+        avatar_a_usar = icono_ciel if msg["role"] == "assistant" else "👤"
+        with st.chat_message(msg["role"], avatar=avatar_a_usar):
+            st.markdown(msg["content"])
 
     if prompt := st.chat_input("Escribe tu duda aquí..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user", avatar="👤"):
             st.markdown(prompt)
 
         with st.chat_message("assistant", avatar=icono_ciel):
             with st.spinner("Ciel está pensando..."):
-                try:
-                    response = st.session_state.chat_session.send_message(prompt)
-                    st.markdown(response.text)
-                    if activar_voz:
-                        hablar_con_ciel(response.text)
-                except Exception as e:
-                    # CORRECCIÓN AQUÍ: Ahora Ciel nos dirá exactamente por qué falla
-                    st.error(f"⚠️ Error detallado de Google: {e}")
+                respuesta_texto = consultar_ia(prompt)
+                st.markdown(respuesta_texto)
+                st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
+                
+                if activar_voz and "⚠️" not in respuesta_texto and "⏳" not in respuesta_texto:
+                    hablar_con_ciel(respuesta_texto)
 
 # ==========================================
 # 2. MODO PLAN DE ESTUDIO
@@ -169,18 +183,65 @@ elif modo == "📅 Modo Plan de Estudio":
     if st.button("✨ Generar mi Ruta de Estudio"):
         if materia:
             with st.spinner("Ciel está estructurando tu calendario..."):
-                try:
-                    prompt = f"Crea un plan detallado para '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
-                    response = modelo_base.generate_content(prompt)
-                    st.markdown(response.text)
-                except Exception as e:
-                    st.error(f"⚠️ Error detallado de Google: {e}")
+                prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
+                respuesta = consultar_ia(prompt_plan)
+                st.markdown(respuesta)
         else:
             st.warning("Ingresa la materia.")
 
 # ==========================================
-# 3. LECTOR Y 4. EXÁMENES
+# 3. MODO LECTOR DE DOCUMENTOS
 # ==========================================
-# (Se han minimizado para enfocarnos en arreglar el error principal de conexión)
-elif modo == "📄 Modo Lector de Documentos" or modo == "📝 Modo Creador de Exámenes":
-    st.info("⚠️ Estamos reparando la conexión del chat principal. Una vez funcione, activaremos los demás modos.")
+elif modo == "📄 Modo Lector de Documentos":
+    st.title("📄 Lector Inteligente de Ciel")
+    uploaded_file = st.file_uploader("Sube tu archivo (PDF o TXT)", type=["pdf", "txt"])
+
+    if uploaded_file is not None:
+        st.success(f"¡'{uploaded_file.name}' cargado correctamente!")
+        pregunta_doc = st.text_input("¿Qué quieres que te explique o resuma del documento?")
+        
+        if st.button("🔍 Consultar documento"):
+            if pregunta_doc:
+                with st.spinner("Ciel está leyendo el archivo..."):
+                    try:
+                        texto_extraido = ""
+                        if uploaded_file.name.endswith('.pdf'):
+                            pdf_reader = PyPDF2.PdfReader(uploaded_file)
+                            for page in pdf_reader.pages:
+                                texto_extraido += page.extract_text() + "\n"
+                        elif uploaded_file.name.endswith('.txt'):
+                            texto_extraido = str(uploaded_file.read(), "utf-8")
+                        
+                        texto_corto = texto_extraido[:12000]
+                        prompt_doc = f"Basado en este documento:\n{texto_corto}\n\nResponde: {pregunta_doc}"
+                        respuesta = consultar_ia(prompt_doc)
+                        st.markdown("### 💡 Respuesta de Ciel:")
+                        st.markdown(respuesta)
+                    except Exception as e:
+                        st.error(f"Error al leer el archivo: {e}")
+            else:
+                st.warning("Escribe una pregunta.")
+
+# ==========================================
+# 4. MODO CREADOR DE EXÁMENES
+# ==========================================
+elif modo == "📝 Modo Creador de Exámenes":
+    st.title("📝 Simulador de Exámenes")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        tema_examen = st.text_input("¿Sobre qué tema quieres evaluarte?")
+        dificultad = st.selectbox("Nivel de dificultad:", ["Básico", "Intermedio", "Universitario / Avanzado"])
+    with col2:
+        num_preguntas = st.slider("Cantidad de preguntas:", 3, 10, 5)
+        tipo_preguntas = st.selectbox("Formato:", ["Opción múltiple", "Verdadero o Falso", "Preguntas de Desarrollo"])
+
+    if st.button("🚀 Generar mi Examen"):
+        if tema_examen:
+            with st.spinner("Ciel está redactando las preguntas..."):
+                prompt_examen = f"Crea un examen de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' (Dificultad: {dificultad}). Pon las preguntas primero y al final las respuestas."
+                respuesta = consultar_ia(prompt_examen)
+                st.markdown("### 📝 Tu Examen:")
+                st.markdown(respuesta)
+        else:
+            st.warning("¡Necesito saber el tema!")
