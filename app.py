@@ -1,23 +1,34 @@
 import streamlit as st
 import os
-from google import genai
-from google.genai import errors
+import google.generativeai as genai
 from gtts import gTTS
 from PIL import Image
 
 # ==========================================
 # CONFIGURACIÓN DE PÁGINA E ÍCONO
 # ==========================================
+# Intentamos cargar la imagen (asegúrate de que esté en tu GitHub)
 try:
+    # Si la subiste como .png normal
     icono_ciel = Image.open("icono_ciel.png")
-    icono_pestana = icono_ciel
 except FileNotFoundError:
-    icono_ciel = None
-    icono_pestana = "🤖"
+    try:
+        # Por si la subiste con la extensión que me enviaste (.jfif)
+        icono_ciel = Image.open("icono_ciel.png.jfif")
+    except FileNotFoundError:
+        icono_ciel = "🌟" # Fallback si no encuentra la imagen
 
-st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_pestana, layout="wide")
+st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
 
-client = genai.Client(api_key="AQ.Ab8RN6K8OVjfYfWV0lVdKnBh1xBCGycLCY2PHLppq5IhSeBgMw")
+# ==========================================
+# CONEXIÓN SEGURA A LA API DE GOOGLE
+# ==========================================
+# Lee la clave secreta directamente de Render, evitando que quede expuesta en el código.
+api_key = os.environ.get("GEMINI_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    st.error("⚠️ Falla de seguridad: No se encontró la GEMINI_API_KEY en las variables de entorno.")
 
 # ==========================================
 # CSS PERSONALIZADO (Glassmorphism & Animaciones)
@@ -25,29 +36,23 @@ client = genai.Client(api_key="AQ.Ab8RN6K8OVjfYfWV0lVdKnBh1xBCGycLCY2PHLppq5IhSe
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    /* El header {visibility: hidden;} fue eliminado para asegurar que el botón del menú siempre aparezca en móviles */
-
     .stApp {
         background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
         color: #f8fafc;
         font-family: 'Poppins', sans-serif !important;
     }
-
     [data-testid="stSidebar"] {
         background-color: rgba(15, 23, 42, 0.4) !important;
         backdrop-filter: blur(12px);
         border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
-
     h1, h2, h3 {
         color: #e0e7ff !important;
         font-weight: 600;
         text-shadow: 0 2px 10px rgba(168, 85, 247, 0.2);
     }
-
     .stButton>button {
         background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
         color: white !important;
@@ -58,24 +63,16 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         transition: all 0.3s ease !important;
     }
-
     .stButton>button:hover {
         transform: translateY(-3px) scale(1.02);
         box-shadow: 0 8px 25px rgba(168, 85, 247, 0.6);
     }
-
     .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
         background-color: rgba(255, 255, 255, 0.05);
         color: #ffffff;
         border-radius: 15px;
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
-    .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
-        border: 1px solid #a855f7;
-        box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
-    }
-
     [data-testid="stChatMessage"] {
         background-color: rgba(255, 255, 255, 0.03);
         border-radius: 20px;
@@ -90,7 +87,7 @@ st.markdown("""
 # ==========================================
 # BARRA LATERAL (Menú e Imagen de Ciel)
 # ==========================================
-if icono_ciel:
+if isinstance(icono_ciel, Image.Image):
     st.sidebar.image(icono_ciel, use_container_width=True)
 
 st.sidebar.title("🌟 Ciel AI")
@@ -109,7 +106,7 @@ activar_voz = st.sidebar.checkbox("🔊 Activar voz de Ciel", value=True)
 st.sidebar.markdown("<p style='color: #a1a1aa; font-size: 0.85rem;'>La hermana menor del mundo de las IA, lista para ayudarte a triunfar. 🌟</p>", unsafe_allow_html=True)
 
 # ==========================================
-# FUNCIÓN DE VOZ
+# FUNCIONES NÚCLEO
 # ==========================================
 def hablar_con_ciel(texto):
     try:
@@ -128,6 +125,12 @@ system_instruction_ciel = (
     "'¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
 )
 
+# Inicializamos el modelo correcto
+modelo_base = genai.GenerativeModel(
+    model_name='gemini-1.5-flash',
+    system_instruction=system_instruction_ciel
+)
+
 # ==========================================
 # 1. MODO IA (Tutor Conversacional)
 # ==========================================
@@ -135,43 +138,32 @@ if modo == "🤖 Modo IA (Tutor)":
     st.title("Hola, soy Ciel 👋")
     st.markdown("¿Qué concepto o materia quieres dominar hoy?")
 
-    if "messages_ia" not in st.session_state:
-        st.session_state.messages_ia = []
+    if "chat_session" not in st.session_state:
+        st.session_state.chat_session = modelo_base.start_chat(history=[])
 
-    for message in st.session_state.messages_ia:
-        with st.chat_message(message["role"], avatar="🌟" if message["role"] == "assistant" else "👤"):
-            st.markdown(message["content"])
+    # Mostrar historial de mensajes usando la imagen de Ciel como avatar
+    for message in st.session_state.chat_session.history:
+        role = "assistant" if message.role == "model" else "user"
+        avatar_a_usar = icono_ciel if role == "assistant" else "👤"
+        
+        with st.chat_message(role, avatar=avatar_a_usar):
+            st.markdown(message.parts[0].text)
 
     if prompt := st.chat_input("Escribe tu duda aquí..."):
-        st.session_state.messages_ia.append({"role": "user", "content": prompt})
         with st.chat_message("user", avatar="👤"):
             st.markdown(prompt)
 
-        with st.chat_message("assistant", avatar="🌟"):
-            with st.spinner("Ciel está analizando..."):
-                contents = [
-                    {"role": "user" if m["role"] == "user" else "model", "parts": [{"text": m["content"]}]}
-                    for m in st.session_state.messages_ia
-                ]
-
+        with st.chat_message("assistant", avatar=icono_ciel):
+            with st.spinner("Ciel está pensando..."):
                 try:
-                    response = client.models.generate_content(
-                        model="gemini-3.8-flash",
-                        contents=contents,
-                        config={"system_instruction": system_instruction_ciel}
-                    )
+                    response = st.session_state.chat_session.send_message(prompt)
                     st.markdown(response.text)
-                    st.session_state.messages_ia.append({"role": "assistant", "content": response.text})
                     
                     if activar_voz:
                         hablar_con_ciel(response.text)
                         
-                except errors.ServerError as e:
-                    st.warning("⚠️ ¡Uff! Muchas personas me están haciendo preguntas ahora mismo y mis servidores están un poco cansados. Por favor, espera unos segundos e intenta enviarme tu pregunta de nuevo. 🌟")
-                    if activar_voz:
-                        hablar_con_ciel("Estoy un poco ocupada ahora mismo, por favor intenta de nuevo en unos segundos.")
                 except Exception as e:
-                    st.error(f"Ocurrió un error inesperado de conexión. Intenta nuevamente.")
+                    st.error("Ocurrió un error de conexión con Google. Intenta nuevamente en unos segundos.")
 
 # ==========================================
 # 2. MODO PLAN DE ESTUDIO
@@ -192,18 +184,15 @@ elif modo == "📅 Modo Plan de Estudio":
             with st.spinner("Ciel está estructurando tu calendario..."):
                 try:
                     prompt = f"Crea un plan detallado para '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
-                    response = client.models.generate_content(
-                        model="gemini-3.8-flash",
-                        contents=prompt,
-                        config={"system_instruction": system_instruction_ciel}
-                    )
+                    response = modelo_base.generate_content(prompt)
+                    
                     st.markdown("### 📋 Tu Plan de Ciel:")
                     st.markdown(response.text)
                     
                     if activar_voz:
                         hablar_con_ciel("Aquí tienes tu plan de estudio. ¡Vamos con todo!")
                 except Exception as e:
-                    st.warning("⚠️ Los servidores de Google están saturados. ¡Dame unos segundos e intenta de nuevo!")
+                    st.warning("⚠️ Los servidores están ocupados. ¡Dame unos segundos e intenta de nuevo!")
         else:
             st.warning("Por favor ingresa al menos el nombre de la materia.")
 
@@ -222,33 +211,31 @@ elif modo == "📄 Modo Lector de Documentos":
             f.write(uploaded_file.getbuffer())
 
         st.success(f"¡'{uploaded_file.name}' cargado correctamente!")
-
-        try:
-            with st.spinner("Procesando archivo..."):
-                archivo_subido = client.files.upload(file=temp_path)
-
-            pregunta_doc = st.text_input("¿Qué quieres que te explique o resuma del documento?")
-            
-            if st.button("🔍 Consultar documento"):
-                if pregunta_doc:
-                    with st.spinner("Ciel está leyendo las páginas..."):
-                        response = client.models.generate_content(
-                            model="gemini-3.8-flash",
-                            contents=[archivo_subido, pregunta_doc],
-                            config={"system_instruction": system_instruction_ciel}
-                        )
+        pregunta_doc = st.text_input("¿Qué quieres que te explique o resuma del documento?")
+        
+        if st.button("🔍 Consultar documento"):
+            if pregunta_doc:
+                with st.spinner("Ciel está leyendo el documento..."):
+                    try:
+                        archivo_subido = genai.upload_file(path=temp_path)
+                        response = modelo_base.generate_content([archivo_subido, pregunta_doc])
+                        
                         st.markdown("### 💡 Respuesta de Ciel:")
                         st.markdown(response.text)
                         
                         if activar_voz:
                             hablar_con_ciel(response.text)
-                else:
-                    st.warning("Escribe una pregunta sobre el documento.")
-        except Exception as e:
-            st.warning("⚠️ Hubo un problema al procesar el archivo por saturación de servidores. Intenta de nuevo en un momento.")
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+                            
+                        # Limpieza del archivo en Google
+                        genai.delete_file(archivo_subido.name)
+                    except Exception as e:
+                        st.warning("⚠️ Hubo un problema de conexión al procesar el archivo. Intenta de nuevo.")
+            else:
+                st.warning("Escribe una pregunta sobre el documento.")
+                
+        # Limpieza local
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
 # ==========================================
 # 4. MODO CREADOR DE EXÁMENES
@@ -271,11 +258,8 @@ elif modo == "📝 Modo Creador de Exámenes":
                 try:
                     prompt = f"Actúa como un profesor evaluador. Crea un examen de {num_preguntas} preguntas de tipo '{tipo_preguntas}' sobre el tema '{tema_examen}' con un nivel de dificultad '{dificultad}'. \n\nInstrucciones: \n1. Primero escribe solo las preguntas.\n2. Deja una línea de separación visual que diga '--- RESPUESTAS ---'. \n3. Luego escribe las respuestas correctas con una breve explicación para que el estudiante pueda autocorregirse."
                     
-                    response = client.models.generate_content(
-                        model="gemini-3.8-flash",
-                        contents=prompt,
-                        config={"system_instruction": system_instruction_ciel}
-                    )
+                    response = modelo_base.generate_content(prompt)
+                    
                     st.markdown("### 📝 Tu Examen:")
                     st.markdown(response.text)
                     
