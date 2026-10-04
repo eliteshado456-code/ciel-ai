@@ -123,7 +123,7 @@ def consultar_openrouter(mensajes):
         return "⚠️ Falta configurar el OPENROUTER_API_KEY en Render."
     
     completion = client.chat.completions.create(
-        model="google/gemini-flash-1.5-8b:free",  # Usamos el modelo gratuito y veloz de Gemini vía OpenRouter
+        model="google/gemini-flash-1.5-8b:free",
         messages=mensajes,
         temperature=0.7
     )
@@ -252,4 +252,4 @@ elif modo == "📝 Modo Creador de Exámenes":
                 st.markdown("### 📝 Tu Examen:")
                 st.markdown(respuesta)
         else:
-            st.warning("¡Necesito saber el tema!"))
+            st.warning("¡Necesito saber el tema!")
