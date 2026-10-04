@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from openai import OpenAI
+import google.generativeai as genai
 from gtts import gTTS
 from PIL import Image
 import PyPDF2
@@ -19,13 +19,25 @@ except FileNotFoundError:
 st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
 
 # ==========================================
-# CONEXIÓN A OPENROUTER API
+# CONEXIÓN A GOOGLE GEMINI API (DIRECTA)
 # ==========================================
-openrouter_key = os.environ.get("OPENROUTER_API_KEY")
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=openrouter_key,
-) if openrouter_key else None
+gemini_key = os.environ.get("GEMINI_API_KEY")
+
+if gemini_key:
+    genai.configure(api_key=gemini_key)
+    generation_config = {"temperature": 0.7}
+    system_instruction_ciel = (
+        "Eres Ciel, un tutor académico amigable, paciente y empático. "
+        "Guía a los estudiantes mediante explicaciones claras. "
+        "Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+    )
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
+        system_instruction=system_instruction_ciel
+    )
+else:
+    model = None
 
 # ==========================================
 # CSS PERSONALIZADO
@@ -112,22 +124,24 @@ def hablar_con_ciel(texto):
     except Exception as e:
         pass
 
-system_instruction_ciel = (
-    "Eres Ciel, un tutor académico amigable, paciente y empático. "
-    "Guía a los estudiantes mediante explicaciones claras. "
-    "Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
-)
-
-def consultar_openrouter(mensajes):
-    if not client:
-        return "⚠️ Falta configurar el OPENROUTER_API_KEY en Render."
+def consultar_gemini_chat(mensajes_streamlit):
+    if not model:
+        return "⚠️ Falta configurar el GEMINI_API_KEY en Render."
     
-    completion = client.chat.completions.create(
-        model="deepseek/deepseek-r1:free",
-        messages=mensajes,
-        temperature=0.7
-    )
-    return completion.choices[0].message.content
+    historial = []
+    for msg in mensajes_streamlit[:-1]:
+        rol = "user" if msg["role"] == "user" else "model"
+        historial.append({"role": rol, "parts": [msg["content"]]})
+    
+    chat = model.start_chat(history=historial)
+    response = chat.send_message(mensajes_streamlit[-1]["content"])
+    return response.text
+
+def consultar_gemini_prompt(prompt_texto):
+    if not model:
+        return "⚠️ Falta configurar el GEMINI_API_KEY en Render."
+    response = model.generate_content(prompt_texto)
+    return response.text
 
 # ==========================================
 # 1. MODO IA (Tutor Conversacional)
@@ -151,10 +165,7 @@ if modo == "🤖 Modo IA (Tutor)":
         with st.chat_message("assistant", avatar=icono_ciel):
             with st.spinner("Ciel está pensando..."):
                 try:
-                    mensajes_api = [{"role": "system", "content": system_instruction_ciel}]
-                    mensajes_api.extend(st.session_state.messages)
-                    
-                    respuesta_texto = consultar_openrouter(mensajes_api)
+                    respuesta_texto = consultar_gemini_chat(st.session_state.messages)
                     st.markdown(respuesta_texto)
                     st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
                     
@@ -180,11 +191,7 @@ elif modo == "📅 Modo Plan de Estudio":
         if materia:
             with st.spinner("Ciel está estructurando tu calendario..."):
                 prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
-                mensajes = [
-                    {"role": "system", "content": system_instruction_ciel},
-                    {"role": "user", "content": prompt_plan}
-                ]
-                respuesta = consultar_openrouter(mensajes)
+                respuesta = consultar_gemini_prompt(prompt_plan)
                 st.markdown(respuesta)
         else:
             st.warning("Ingresa la materia.")
@@ -214,11 +221,7 @@ elif modo == "📄 Modo Lector de Documentos":
                         
                         texto_corto = texto_extraido[:15000]
                         prompt_doc = f"Basado en este documento:\n{texto_corto}\n\nResponde: {pregunta_doc}"
-                        mensajes = [
-                            {"role": "system", "content": system_instruction_ciel},
-                            {"role": "user", "content": prompt_doc}
-                        ]
-                        respuesta = consultar_openrouter(mensajes)
+                        respuesta = consultar_gemini_prompt(prompt_doc)
                         st.markdown("### 💡 Respuesta de Ciel:")
                         st.markdown(respuesta)
                     except Exception as e:
@@ -244,12 +247,9 @@ elif modo == "📝 Modo Creador de Exámenes":
         if tema_examen:
             with st.spinner("Ciel está redactando las preguntas..."):
                 prompt_examen = f"Crea un examen de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' (Dificultad: {dificultad}). Pon las preguntas primero y al final las respuestas."
-                mensajes = [
-                    {"role": "system", "content": system_instruction_ciel},
-                    {"role": "user", "content": prompt_examen}
-                ]
-                respuesta = consultar_openrouter(mensajes)
+                respuesta = consultar_gemini_prompt(prompt_examen)
                 st.markdown("### 📝 Tu Examen:")
                 st.markdown(respuesta)
         else:
             st.warning("¡Necesito saber el tema!")
+                
