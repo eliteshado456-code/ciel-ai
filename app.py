@@ -17,7 +17,7 @@ except FileNotFoundError:
     except FileNotFoundError:
         icono_ciel = "🌟"
 
-st.set_page_config(page_title="Ciel AI - Tu Asistente Inteligente", page_icon=icono_ciel, layout="wide")
+st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
 
 # ==========================================
 # ESTADO DE NAVEGACIÓN
@@ -28,7 +28,7 @@ if 'modo' not in st.session_state:
 modo = st.session_state.modo
 
 # ==========================================
-# CONEXIÓN A HUGGING FACE API
+# CONEXIÓN A HUGGING FACE API (INFERENCE CLIENT)
 # ==========================================
 hf_token = os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
 
@@ -39,153 +39,126 @@ else:
     client = None
 
 # ==========================================
-# NUEVO CSS Y DISEÑO VISUAL MEJORADO
+# CSS PERSONALIZADO: ESTILO TECNOLÓGICO Y ESTELAR
 # ==========================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;600&display=swap');
     
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    /* Fondo general moderno tipo glassmorphism oscuro */
+    
+    /* Fondo general con efecto estelar y ciberespacial */
     .stApp {
-        background: radial-gradient(circle at 50% 10%, #171b36 0%, #0b0f19 100%);
-        color: #f1f5f9;
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-    }
-
-    /* Menú lateral elegante */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(11, 15, 25, 0.95) 100%) !important;
-        backdrop-filter: blur(16px);
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        padding-top: 1rem;
-    }
-
-    /* Tipografía de títulos */
-    h1, h2, h3 {
-        color: #f8fafc !important;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-    }
-
-    /* Botones de navegación del sidebar estilizados */
-    .stSidebar .stButton>button {
-        background: rgba(255, 255, 255, 0.03);
-        color: #cbd5e1 !important;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        padding: 0.6rem 1rem;
-        font-weight: 500;
-        text-align: left;
-        width: 100%;
-        transition: all 0.25s ease;
+        background: radial-gradient(circle at 50% 50%, #0d1b2a 0%, #0b0914 70%, #030208 100%);
+        color: #e2e8f0;
+        font-family: 'Poppins', sans-serif !important;
     }
     
-    .stSidebar .stButton>button:hover {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-        color: #ffffff !important;
-        border-color: transparent;
-        transform: translateX(4px);
-        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    /* Menú lateral tecnológico */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, rgba(11, 15, 25, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        backdrop-filter: blur(15px);
+        border-right: 1px solid rgba(56, 189, 248, 0.2);
+        box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
     }
-
-    /* Botones de acción general */
-    .stButton>button {
-        background: linear-gradient(135deg, #6366f1 0%, #9333ea 100%);
-        color: white !important;
-        border-radius: 14px;
-        border: none;
-        padding: 0.6rem 1.5rem;
+    
+    /* Tipografías con estilo futurista */
+    h1, h2, h3 {
+        font-family: 'Orbitron', sans-serif !important;
+        color: #38bdf8 !important;
         font-weight: 600;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        transition: all 0.3s ease;
+        letter-spacing: 1px;
+        text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+    
+    /* Botones estilo panel de control espacial */
+    .stButton>button {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #38bdf8 !important;
+        border-radius: 12px;
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        padding: 0.7rem 1.5rem;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
+        transition: all 0.3s ease !important;
+        width: 100%;
     }
     .stButton>button:hover {
+        background: linear-gradient(135deg, #38bdf8 100%, #6366f1 0%);
+        color: #ffffff !important;
+        border-color: #38bdf8;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(147, 51, 234, 0.5);
-    }
-
-    /* Inputs y áreas de texto con diseño flotante */
-    .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
-        background-color: rgba(255, 255, 255, 0.04);
-        color: #ffffff;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 0.6rem 1rem;
-        transition: all 0.2s ease;
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
     }
     
+    /* Entradas de texto y selectores futuristas */
+    .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
+        background-color: rgba(15, 23, 42, 0.8);
+        color: #38bdf8;
+        border-radius: 12px;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        font-family: 'Poppins', sans-serif;
+    }
     .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+        border-color: #38bdf8;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
     }
-
-    /* Burbujas de chat modernas y limpias */
+    
+    /* Cajas de chat estilo holográfico */
     [data-testid="stChatMessage"] {
-        background: rgba(255, 255, 255, 0.025);
-        border-radius: 18px;
-        padding: 1.2rem;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        margin-bottom: 1rem;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        margin-bottom: 15px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        backdrop-filter: blur(4px);
     }
-
-    /* Caja inferior de chat fija / estilizada */
+    
+    /* Barra inferior de entrada de chat estilo panel tecnológico */
     [data-testid="stChatInput"] {
-        background-color: transparent !important;
-        padding-bottom: 1rem;
-    }
-    [data-testid="stChatInput"] textarea {
-        background-color: rgba(15, 23, 42, 0.8) !important;
-        border: 1px solid rgba(129, 140, 248, 0.3) !important;
+        background-color: rgba(15, 23, 42, 0.9) !important;
         border-radius: 16px !important;
-        color: #f8fafc !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(56, 189, 248, 0.4) !important;
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.2) !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# MENÚ LATERAL REDISEÑADO
+# MENÚ LATERAL TECNOLÓGICO
 # ==========================================
-with st.sidebar:
-    col_logo, col_titulo = st.columns([1, 3])
-    with col_logo:
-        if isinstance(icono_ciel, Image.Image):
-            st.image(icono_ciel, width=45)
-        else:
-            st.markdown("### 🌟")
-    with col_titulo:
-        st.markdown("### Ciel AI")
-    
-    st.markdown("<p style='font-size: 0.85rem; color: #94a3b8; margin-top: -10px;'>Asistente Académico Inteligente</p>", unsafe_allow_html=True)
-    st.markdown("---")
+if isinstance(icono_ciel, Image.Image):
+    st.sidebar.image(icono_ciel)
 
-    st.markdown("#### 🧭 Navegación")
-    
-    if st.button("💬 Tutor IA Interactivo"):
-        st.session_state.modo = "🤖 Modo IA (Tutor)"
-        st.rerun()
+st.sidebar.title("🌟 Ciel AI")
+st.sidebar.markdown("<p style='color: #94a3b8; font-size: 12px;'>SISTEMA DE ASISTENCIA ESTELAR</p>", unsafe_allow_html=True)
+st.sidebar.markdown("---")
 
-    if st.button("📅 Planificador de Estudio"):
-        st.session_state.modo = "📅 Modo Plan de Estudio"
-        st.rerun()
+if st.sidebar.button("💬 Interfaz Tutor IA"):
+    st.session_state.modo = "🤖 Modo IA (Tutor)"
+    st.rerun()
 
-    if st.button("📄 Lector Inteligente"):
-        st.session_state.modo = "📄 Modo Lector de Documentos"
-        st.rerun()
+st.sidebar.markdown("---")
+if st.sidebar.button("📅 Planificador Cuántico"):
+    st.session_state.modo = "📅 Modo Plan de Estudio"
+    st.rerun()
 
-    if st.button("📝 Simulador de Exámenes"):
-        st.session_state.modo = "📝 Modo Creador de Exámenes"
-        st.rerun()
+st.sidebar.markdown("---")
+if st.sidebar.button("📄 Lector de Datos"):
+    st.session_state.modo = "📄 Modo Lector de Documentos"
+    st.rerun()
 
-    st.markdown("---")
-    st.markdown("#### ⚙️ Configuración de Voz")
-    activar_voz = st.toggle("Activar voz de Ciel", value=True)
+st.sidebar.markdown("---")
+if st.sidebar.button("📝 Simulador de Pruebas"):
+    st.session_state.modo = "📝 Modo Creador de Exámenes"
+    st.rerun()
+
+st.sidebar.markdown("---")
+activar_voz = st.sidebar.checkbox("🔊 Canal de Voz Activo", value=True)
 
 # ==========================================
 # FUNCIONES NÚCLEO
@@ -233,9 +206,8 @@ def consultar_hf_prompt(prompt_texto):
 # 1. MODO IA (Tutor Conversacional)
 # ==========================================
 if modo == "🤖 Modo IA (Tutor)":
-    st.title("🌟 Hola, soy Ciel")
-    st.markdown("<p style='color: #94a3b8; font-size: 1.05rem;'>Tu espacio personal de tutoría inteligente, listo para ayudarte a descifrar cualquier duda, concepto o constelación.</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.title("🌌 Ciel AI — Núcleo Estelar")
+    st.markdown("<p style='color: #94a3b8; margin-bottom: 25px;'>Terminal de consulta académica e interpretación de signos y constelaciones.</p>", unsafe_allow_html=True)
     
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -245,13 +217,13 @@ if modo == "🤖 Modo IA (Tutor)":
         with st.chat_message(msg["role"], avatar=avatar_a_usar):
             st.markdown(msg["content"])
 
-    if prompt := st.chat_input("Escribe tu duda o pregúntale a Ciel sobre cualquier signo o símbolo..."):
+    if prompt := st.chat_input("Transmita su consulta o símbolo al núcleo de Ciel..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user", avatar="👤"):
             st.markdown(prompt)
 
         with st.chat_message("assistant", avatar=icono_ciel):
-            with st.spinner("Ciel está preparando su respuesta..."):
+            with st.spinner("Ciel está procesando en el núcleo estelar..."):
                 try:
                     respuesta_texto = consultar_huggingface(st.session_state.messages)
                     st.markdown(respuesta_texto)
@@ -266,9 +238,8 @@ if modo == "🤖 Modo IA (Tutor)":
 # 2. MODO PLAN DE ESTUDIO
 # ==========================================
 elif modo == "📅 Modo Plan de Estudio":
-    st.title("📅 Planificador de Ciel")
-    st.markdown("<p style='color: #94a3b8;'>Organiza tus metas académicas de forma eficiente.</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.title("📅 Planificador Cuántico")
+    st.markdown("<p style='color: #94a3b8;'>Optimización temporal y distribución de cargas de estudio.</p>", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
@@ -277,32 +248,31 @@ elif modo == "📅 Modo Plan de Estudio":
     with col2:
         horas_disponibles = st.slider("Horas de estudio diarias:", 1, 8, 2)
 
-    if st.button("✨ Generar mi Ruta de Estudio"):
+    if st.button("✨ Iniciar Secuencia de Planificación"):
         if materia:
-            with st.spinner("Ciel está estructurando tu calendario..."):
+            with st.spinner("Calculando ruta temporal óptima..."):
                 prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
                 respuesta = consultar_hf_prompt(prompt_plan)
                 st.markdown(respuesta)
         else:
-            st.warning("Ingresa la materia.")
+            st.warning("Debe ingresar la materia o examen.")
 
 # ==========================================
 # 3. MODO LECTOR DE DOCUMENTOS
 # ==========================================
 elif modo == "📄 Modo Lector de Documentos":
-    st.title("📄 Lector Inteligente de Ciel")
-    st.markdown("<p style='color: #94a3b8;'>Sube tus archivos y obtén explicaciones detalladas al instante.</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.title("📄 Lector de Datos y Archivos")
+    st.markdown("<p style='color: #94a3b8;'>Análisis estelar de contenido documental (PDF / TXT).</p>", unsafe_allow_html=True)
         
-    uploaded_file = st.file_uploader("Sube tu archivo (PDF o TXT)", type=["pdf", "txt"])
+    uploaded_file = st.file_uploader("Cargue su archivo de texto o PDF", type=["pdf", "txt"])
 
     if uploaded_file is not None:
-        st.success(f"¡'{uploaded_file.name}' cargado correctamente!")
-        pregunta_doc = st.text_input("¿Qué quieres que te explique, analice or reconozca del documento?")
+        st.success(f"¡Archivo '{uploaded_file.name}' sincronizado con éxito!")
+        pregunta_doc = st.text_input("¿Qué parámetro o análisis requiere extraer del documento?")
         
-        if st.button("🔍 Consultar documento"):
+        if st.button("🔍 Ejecutar Análisis Documental"):
             if pregunta_doc:
-                with st.spinner("Ciel está leyendo el archivo..."):
+                with st.spinner("Extrayendo información del documento..."):
                     try:
                         texto_extraido = ""
                         if uploaded_file.name.endswith('.pdf'):
@@ -315,35 +285,34 @@ elif modo == "📄 Modo Lector de Documentos":
                         texto_corto = texto_extraido[:12000]
                         prompt_doc = f"Basado en este documento:\n{texto_corto}\n\nResponde: {pregunta_doc}"
                         respuesta = consultar_hf_prompt(prompt_doc)
-                        st.markdown("### 💡 Respuesta de Ciel:")
+                        st.markdown("### 💡 Diagnóstico de Ciel:")
                         st.markdown(respuesta)
                     except Exception as e:
-                        st.error(f"Error al leer el archivo: {e}")
+                        st.error(f"Error al procesar el archivo: {e}")
             else:
-                st.warning("Escribe una pregunta.")
+                st.warning("Ingrese una consulta sobre el documento.")
 
 # ==========================================
 # 4. MODO CREADOR DE EXÁMENES
 # ==========================================
 elif modo == "📝 Modo Creador de Exámenes":
-    st.title("📝 Simulador de Exámenes")
-    st.markdown("<p style='color: #94a3b8;'>Evalúa tus conocimientos con pruebas personalizadas.</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.title("📝 Simulador de Pruebas Estelares")
+    st.markdown("<p style='color: #94a3b8;'>Generación avanzada de reactivos y evaluaciones de conocimiento.</p>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        tema_examen = st.text_input("¿Sobre qué tema quieres evaluarte?")
-        dificultad = st.selectbox("Nivel de dificultad:", ["Básico", "Intermedio", "Universitario / Avanzado"])
+        tema_examen = st.text_input("¿Sobre qué área temática se evaluará?")
+        dificultad = st.selectbox("Nivel de calibración:", ["Básico", "Intermedio", "Universitario / Avanzado"])
     with col2:
-        num_preguntas = st.slider("Cantidad de preguntas:", 3, 10, 5)
-        tipo_preguntas = st.selectbox("Formato:", ["Opción múltiple", "Verdadero o Falso", "Preguntas de Desarrollo"])
+        num_preguntas = st.slider("Cantidad de reactivos:", 3, 10, 5)
+        tipo_preguntas = st.selectbox("Formato de evaluación:", ["Opción múltiple", "Verdadero o Falso", "Preguntas de Desarrollo"])
 
-    if st.button("🚀 Generar mi Examen"):
+    if st.button("🚀 Generar Evaluación"):
         if tema_examen:
-            with st.spinner("Ciel está redactando las preguntas..."):
+            with st.spinner("Generando reactivos de evaluación..."):
                 prompt_examen = f"Crea un examen de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' (Dificultad: {dificultad}). Pon las preguntas primero y al final las respuestas."
                 respuesta = consultar_hf_prompt(prompt_examen)
-                st.markdown("### 📝 Tu Examen:")
+                st.markdown("### 📝 Evaluación Generada:")
                 st.markdown(respuesta)
         else:
-            st.warning("¡Necesito saber el tema!")
+            st.warning("¡Debe especificar el tema de la evaluación!")
