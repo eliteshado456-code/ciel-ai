@@ -20,7 +20,7 @@ except FileNotFoundError:
 st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
 
 # ==========================================
-# ESTADO DE NAVEGACIÓN (DEFINIR PRIMERO)
+# ESTADO DE NAVEGACIÓN
 # ==========================================
 if 'modo' not in st.session_state:
     st.session_state.modo = "🤖 Modo IA (Tutor)"
@@ -28,7 +28,7 @@ if 'modo' not in st.session_state:
 modo = st.session_state.modo
 
 # ==========================================
-# CONEXIÓN A HUGGING FACE API (INFERENCE CLIENT)
+# CONEXIÓN A HUGGING FACE API
 # ==========================================
 hf_token = os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
 
@@ -39,56 +39,72 @@ else:
     client = None
 
 # ==========================================
-# CSS PERSONALIZADO
+# DISEÑO GRÁFICO Y CSS PERSONALIZADO (ESTILO HUD CÓSMICO)
 # ==========================================
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    
     .stApp {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-        color: #f8fafc;
+        background: radial-gradient(circle at center, #0B132B 0%, #050814 100%);
+        color: #E2E8F0;
         font-family: 'Poppins', sans-serif !important;
     }
+    
+    /* Menú lateral estilo panel de nave espacial */
     [data-testid="stSidebar"] {
-        background-color: rgba(15, 23, 42, 0.4) !important;
-        backdrop-filter: blur(12px);
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        background: linear-gradient(180deg, rgba(11, 19, 43, 0.9) 0%, rgba(5, 8, 20, 0.95) 100%) !important;
+        backdrop-filter: blur(15px);
+        border-right: 1px solid rgba(0, 229, 255, 0.2);
+        box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
     }
+    
     h1, h2, h3 {
-        color: #e0e7ff !important;
+        color: #00E5FF !important;
         font-weight: 600;
-        text-shadow: 0 2px 10px rgba(168, 85, 247, 0.2);
+        text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
     }
+    
+    /* Botones futuristas con destello cian/dorado */
     .stButton>button {
-        background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
-        color: white !important;
-        border-radius: 30px;
-        border: none;
+        background: linear-gradient(90deg, #0077B6 0%, #00B4D8 50%, #90E0EF 100%);
+        color: #050814 !important;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
         padding: 0.6rem 1.5rem;
         font-weight: 600;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 15px rgba(0, 180, 216, 0.4);
         transition: all 0.3s ease !important;
         width: 100%;
     }
+    
     .stButton>button:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.6);
+        transform: translateY(-2px) scale(1.02);
+        background: linear-gradient(90deg, #00B4D8 0%, #90E0EF 100%);
+        box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
+        color: #000000 !important;
     }
+    
+    /* Cajas de texto y entradas tipo panel de control */
     .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
-        background-color: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: rgba(11, 19, 43, 0.6);
+        color: #FFFFFF;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 229, 255, 0.3);
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
     }
+    
+    /* Burbujas de chat */
     [data-testid="stChatMessage"] {
-        background-color: rgba(255, 255, 255, 0.03);
-        border-radius: 20px;
+        background-color: rgba(15, 23, 42, 0.7);
+        border-radius: 15px;
         padding: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 229, 255, 0.2);
         margin-bottom: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -100,7 +116,7 @@ if isinstance(icono_ciel, Image.Image):
     st.sidebar.image(icono_ciel)
 
 st.sidebar.title("🌟 Ciel AI")
-st.sidebar.markdown("Tu espacio de estudio inteligente.")
+st.sidebar.markdown("Interfaz de Estudio Cósmico.")
 st.sidebar.markdown("---")
 
 if st.sidebar.button("💬 Ir a Tutor IA"):
@@ -125,7 +141,6 @@ if st.sidebar.button("📝 Abrir Creador de Exámenes"):
 st.sidebar.markdown("---")
 activar_voz = st.sidebar.checkbox("🔊 Activar voz de Ciel", value=True)
 
-# Actualizamos la variable local de modo
 modo = st.session_state.modo
 
 # ==========================================
@@ -174,7 +189,7 @@ def consultar_hf_prompt(prompt_texto):
 # 1. MODO IA (Tutor Conversacional)
 # ==========================================
 if modo == "🤖 Modo IA (Tutor)":
-    # Detección automática del diseño gráfico principal de inicio
+    # Carga automática del diseño gráfico personalizado principal
     imagen_cargada = False
     for archivo_img in ["fondo_ciel.jpg", "fondo_ciel.jpeg", "Fondo_Ciel.jpg", "Fondo_Ciel.jpeg"]:
         try:
