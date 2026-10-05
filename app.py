@@ -4,6 +4,7 @@ from huggingface_hub import InferenceClient
 from gtts import gTTS
 from PIL import Image
 import PyPDF2
+import re
 
 # ==========================================
 # CONFIGURACIÓN DE PÁGINA E ÍCONO
@@ -147,7 +148,13 @@ modo = st.session_state.modo
 # ==========================================
 def hablar_con_ciel(texto):
     try:
-        tts = gTTS(text=texto, lang='es', slow=False)
+        # Limpiar un poco los emojis o caracteres especiales para que la voz no se interrumpa
+        texto_limpio = re.sub(r'[🌟✨🤖💬📄📅📝⚠️👤]', '', texto)
+        
+        # Añadir pausas naturales en los signos de puntuación clave si es necesario
+        # gTTS respeta nativamente los puntos y comas haciendo pausas sutiles.
+        
+        tts = gTTS(text=texto_limpio, lang='es', slow=False)
         audio_file = "ciel_voz.mp3"
         tts.save(audio_file)
         st.audio(audio_file, format='audio/mp3', autoplay=True)
@@ -158,11 +165,10 @@ def consultar_huggingface(mensajes_streamlit):
     if not client:
         return "⚠️ Falta configurar el token de Hugging Face en las variables de entorno de Render (`HUGGINGFACE_API_KEY`)."
     
-    # Instrucción mejorada para que Ciel reconozca y explique todo tipo de signos, símbolos y constelaciones
     mensajes_completos = [
         {
             "role": "system", 
-            "content": "Eres Ciel, un tutor académico amigable, paciente, empático y experto en astronomía, astrofísica, constelaciones, simbología científica y todo tipo de signos y señales. Guía a los estudiantes explicando con claridad cualquier signo, símbolo, constelación o concepto que te consulten. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+            "content": "Eres Ciel, un tutor académico amigable, paciente, empático y experto en astronomía, astrofísica, constelaciones, simbología científica y todo tipo de signos. Estructura tus respuestas usando pausas claras y puntuación adecuada para que al ser leídas en voz alta suenen suaves, armónicas y naturales. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
         }
     ]
     
@@ -204,7 +210,7 @@ if modo == "🤖 Modo IA (Tutor)":
             st.markdown(prompt)
 
         with st.chat_message("assistant", avatar=icono_ciel):
-            with st.spinner("Ciel está analizando los signos..."):
+            with st.spinner("Ciel está preparando su respuesta..."):
                 try:
                     respuesta_texto = consultar_huggingface(st.session_state.messages)
                     st.markdown(respuesta_texto)
