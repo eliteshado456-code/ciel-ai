@@ -109,7 +109,7 @@ st.sidebar.markdown("---")
 # Opción 2: Planificador con su icono
 st.sidebar.markdown("### 📅 Planificador")
 try:
-    st.sidebar.image("banner_calendario.jpeg_2.jpeg", use_container_width=True)
+    st.sidebar.image("banner_calendario.jpeg", use_container_width=True)
 except FileNotFoundError:
     pass
 if st.sidebar.button("Abrir Plan de Estudio"):
@@ -120,7 +120,7 @@ st.sidebar.markdown("---")
 # Opción 3: Lector con su icono
 st.sidebar.markdown("### 📄 Lector Inteligente")
 try:
-    st.sidebar.image("banner_lector.jpeg_2.jpeg", use_container_width=True)
+    st.sidebar.image("banner_lector.jpeg", use_container_width=True)
 except FileNotFoundError:
     pass
 if st.sidebar.button("Abrir Lector de Documentos"):
@@ -131,7 +131,7 @@ st.sidebar.markdown("---")
 # Opción 4: Exámenes con su icono
 st.sidebar.markdown("### 📝 Simulador")
 try:
-    st.sidebar.image("banner_examen.jpeg_2.jpeg", use_container_width=True)
+    st.sidebar.image("banner_examen.jpeg", use_container_width=True)
 except FileNotFoundError:
     pass
 if st.sidebar.button("Abrir Creador de Exámenes"):
@@ -221,7 +221,7 @@ elif modo == "📅 Modo Plan de Estudio":
     st.title("📅 Planificador de Ciel")
     
     try:
-        st.image("banner_calendario.jpeg_2.jpeg", use_container_width=True)
+        st.image("banner_calendario.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
     
@@ -248,7 +248,7 @@ elif modo == "📄 Modo Lector de Documentos":
     st.title("📄 Lector Inteligente de Ciel")
     
     try:
-        st.image("banner_lector.jpeg_2.jpeg", use_container_width=True)
+        st.image("banner_lector.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
         
@@ -287,7 +287,7 @@ elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de Exámenes")
 
     try:
-        st.image("banner_examen.jpeg_2.jpeg", use_container_width=True)
+        st.image("banner_examen.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
 
