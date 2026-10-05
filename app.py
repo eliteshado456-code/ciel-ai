@@ -92,7 +92,7 @@ if 'modo' not in st.session_state:
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 # ==========================================
-# MENÚ LATERAL CON TUS ICONOS PERSONALIZADOS
+# MENÚ LATERAL (SIN BANNERS INTERNOS)
 # ==========================================
 if isinstance(icono_ciel, Image.Image):
     st.sidebar.image(icono_ciel)
@@ -101,41 +101,19 @@ st.sidebar.title("🌟 Ciel AI")
 st.sidebar.markdown("Tu espacio de estudio inteligente.")
 st.sidebar.markdown("---")
 
-# Opción 1: Tutor IA
 if st.sidebar.button("💬 Ir a Tutor IA"):
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 st.sidebar.markdown("---")
-
-# Opción 2: Planificador con su icono
-st.sidebar.markdown("### 📅 Planificador")
-try:
-    st.sidebar.image("banner_calendario.jpeg", use_container_width=True)
-except FileNotFoundError:
-    pass
-if st.sidebar.button("Abrir Plan de Estudio"):
+if st.sidebar.button("📅 Abrir Plan de Estudio"):
     st.session_state.modo = "📅 Modo Plan de Estudio"
 
 st.sidebar.markdown("---")
-
-# Opción 3: Lector con su icono
-st.sidebar.markdown("### 📄 Lector Inteligente")
-try:
-    st.sidebar.image("banner_lector.jpeg", use_container_width=True)
-except FileNotFoundError:
-    pass
-if st.sidebar.button("Abrir Lector de Documentos"):
+if st.sidebar.button("📄 Abrir Lector de Documentos"):
     st.session_state.modo = "📄 Modo Lector de Documentos"
 
 st.sidebar.markdown("---")
-
-# Opción 4: Exámenes con su icono
-st.sidebar.markdown("### 📝 Simulador")
-try:
-    st.sidebar.image("banner_examen.jpeg", use_container_width=True)
-except FileNotFoundError:
-    pass
-if st.sidebar.button("Abrir Creador de Exámenes"):
+if st.sidebar.button("📝 Abrir Creador de Exámenes"):
     st.session_state.modo = "📝 Modo Creador de Exámenes"
 
 st.sidebar.markdown("---")
@@ -179,7 +157,7 @@ def consultar_huggingface(mensajes_streamlit):
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"⚠️️ Error al conectar con Hugging Face: {e}"
+        return f"⚠️ Error al conectar con Hugging Face: {e}"
 
 def consultar_hf_prompt(prompt_texto):
     mensajes_temp = [{"role": "user", "content": prompt_texto}]
@@ -189,10 +167,17 @@ def consultar_hf_prompt(prompt_texto):
 # 1. MODO IA (Tutor Conversacional)
 # ==========================================
 if modo == "🤖 Modo IA (Tutor)":
-    # Mostramos tu nueva imagen de fondo principal como bienvenida visual
-    try:
-        st.image("fondo_ciel.jpg", use_container_width=True)
-    except FileNotFoundError:
+    # Carga segura del nuevo fondo de inicio (busca .jpg o .jpeg automáticamente)
+    imagen_encontrada = False
+    for ext in ["fondo_ciel.jpg", "fondo_ciel.jpeg"]:
+        try:
+            st.image(ext, use_container_width=True)
+            imagen_encontrada = True
+            break
+        except Exception:
+            continue
+            
+    if not imagen_encontrada:
         st.title("Hola, soy Ciel 👋")
     
     if "messages" not in st.session_state:
@@ -272,30 +257,4 @@ elif modo == "📄 Modo Lector de Documentos":
                         st.markdown("### 💡 Respuesta de Ciel:")
                         st.markdown(respuesta)
                     except Exception as e:
-                        st.error(f"Error al leer el archivo: {e}")
-            else:
-                st.warning("Escribe una pregunta.")
-
-# ==========================================
-# 4. MODO CREADOR DE EXÁMENES
-# ==========================================
-elif modo == "📝 Modo Creador de Exámenes":
-    st.title("📝 Simulador de Exámenes")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        tema_examen = st.text_input("¿Sobre qué tema quieres evaluarte?")
-        dificultad = st.selectbox("Nivel de dificultad:", ["Básico", "Intermedio", "Universitario / Avanzado"])
-    with col2:
-        num_preguntas = st.slider("Cantidad de preguntas:", 3, 10, 5)
-        tipo_preguntas = st.selectbox("Formato:", ["Opción múltiple", "Verdadero o Falso", "Preguntas de Desarrollo"])
-
-    if st.button("🚀 Generar mi Examen"):
-        if tema_examen:
-            with st.spinner("Ciel está redactando las preguntas..."):
-                prompt_examen = f"Crea un examen de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' (Dificultad: {dificultad}). Pon las preguntas primero y al final las respuestas."
-                respuesta = consultar_hf_prompt(prompt_examen)
-                st.markdown("### 📝 Tu Examen:")
-                st.markdown(respuesta)
-        else:
-            st.warning("¡Necesito saber el tema!")
+                        st
