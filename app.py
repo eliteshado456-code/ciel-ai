@@ -61,6 +61,7 @@ st.markdown("""
         font-weight: 600;
         box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         transition: all 0.3s ease !important;
+        width: 100%;
     }
     .stButton>button:hover {
         transform: translateY(-3px) scale(1.02);
@@ -84,42 +85,62 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# BARRA LATERAL CON TUS ÍCONOS DINÁMICOS
+# ESTADO DE NAVEGACIÓN
+# ==========================================
+if 'modo' not in st.session_state:
+    st.session_state.modo = "🤖 Modo IA (Tutor)"
+
+# ==========================================
+# MENÚ LATERAL CON TUS ICONOS PERSONALIZADOS
 # ==========================================
 if isinstance(icono_ciel, Image.Image):
     st.sidebar.image(icono_ciel)
 
 st.sidebar.title("🌟 Ciel AI")
 st.sidebar.markdown("Tu espacio de estudio inteligente.")
+st.sidebar.markdown("---")
 
-modo = st.sidebar.radio("Elige una experiencia:", [
-    "🤖 Modo IA (Tutor)", 
-    "📅 Modo Plan de Estudio", 
-    "📄 Modo Lector de Documentos",
-    "📝 Modo Creador de Exámenes"
-])
+# Opción 1: Tutor IA
+if st.sidebar.button("💬 Ir a Tutor IA"):
+    st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 st.sidebar.markdown("---")
 
-# Mostrar el ícono correspondiente en la barra lateral según el modo seleccionado
-if modo == "📅 Modo Plan de Estudio":
-    try:
-        st.sidebar.image("banner_calendario.jpeg.jpeg", use_container_width=True)
-    except FileNotFoundError:
-        pass
-elif modo == "📄 Modo Lector de Documentos":
-    try:
-        st.sidebar.image("banner_lector.jpeg.jpeg", use_container_width=True)
-    except FileNotFoundError:
-        pass
-elif modo == "📝 Modo Creador de Exámenes":
-    try:
-        st.sidebar.image("banner_examen.jpeg.jpeg", use_container_width=True)
-    except FileNotFoundError:
-        pass
+# Opción 2: Planificador con su icono
+st.sidebar.markdown("### 📅 Planificador")
+try:
+    st.sidebar.image("banner_calendario.jpeg_2.jpeg", use_container_width=True)
+except FileNotFoundError:
+    pass
+if st.sidebar.button("Abrir Plan de Estudio"):
+    st.session_state.modo = "📅 Modo Plan de Estudio"
+
+st.sidebar.markdown("---")
+
+# Opción 3: Lector con su icono
+st.sidebar.markdown("### 📄 Lector Inteligente")
+try:
+    st.sidebar.image("banner_lector.jpeg_2.jpeg", use_container_width=True)
+except FileNotFoundError:
+    pass
+if st.sidebar.button("Abrir Lector de Documentos"):
+    st.session_state.modo = "📄 Modo Lector de Documentos"
+
+st.sidebar.markdown("---")
+
+# Opción 4: Exámenes con su icono
+st.sidebar.markdown("### 📝 Simulador")
+try:
+    st.sidebar.image("banner_examen.jpeg_2.jpeg", use_container_width=True)
+except FileNotFoundError:
+    pass
+if st.sidebar.button("Abrir Creador de Exámenes"):
+    st.session_state.modo = "📝 Modo Creador de Exámenes"
 
 st.sidebar.markdown("---")
 activar_voz = st.sidebar.checkbox("🔊 Activar voz de Ciel", value=True)
+
+modo = st.session_state.modo
 
 # ==========================================
 # FUNCIONES NÚCLEO
@@ -200,7 +221,7 @@ elif modo == "📅 Modo Plan de Estudio":
     st.title("📅 Planificador de Ciel")
     
     try:
-        st.image("banner_calendario.jpeg.jpeg", use_container_width=True)
+        st.image("banner_calendario.jpeg_2.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
     
@@ -227,7 +248,7 @@ elif modo == "📄 Modo Lector de Documentos":
     st.title("📄 Lector Inteligente de Ciel")
     
     try:
-        st.image("banner_lector.jpeg.jpeg", use_container_width=True)
+        st.image("banner_lector.jpeg_2.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
         
@@ -266,7 +287,7 @@ elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de Exámenes")
 
     try:
-        st.image("banner_examen.jpeg.jpeg", use_container_width=True)
+        st.image("banner_examen.jpeg_2.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
 
