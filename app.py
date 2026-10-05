@@ -84,7 +84,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# BARRA LATERAL
+# BARRA LATERAL CON TUS ÍCONOS DINÁMICOS
 # ==========================================
 if isinstance(icono_ciel, Image.Image):
     st.sidebar.image(icono_ciel)
@@ -98,6 +98,25 @@ modo = st.sidebar.radio("Elige una experiencia:", [
     "📄 Modo Lector de Documentos",
     "📝 Modo Creador de Exámenes"
 ])
+
+st.sidebar.markdown("---")
+
+# Mostrar el ícono correspondiente en la barra lateral según el modo seleccionado
+if modo == "📅 Modo Plan de Estudio":
+    try:
+        st.sidebar.image("banner_calendario.jpeg.jpeg", use_container_width=True)
+    except FileNotFoundError:
+        pass
+elif modo == "📄 Modo Lector de Documentos":
+    try:
+        st.sidebar.image("banner_lector.jpeg.jpeg", use_container_width=True)
+    except FileNotFoundError:
+        pass
+elif modo == "📝 Modo Creador de Exámenes":
+    try:
+        st.sidebar.image("banner_examen.jpeg.jpeg", use_container_width=True)
+    except FileNotFoundError:
+        pass
 
 st.sidebar.markdown("---")
 activar_voz = st.sidebar.checkbox("🔊 Activar voz de Ciel", value=True)
@@ -180,7 +199,6 @@ if modo == "🤖 Modo IA (Tutor)":
 elif modo == "📅 Modo Plan de Estudio":
     st.title("📅 Planificador de Ciel")
     
-    # Banner de calendario holográfico
     try:
         st.image("banner_calendario.jpeg.jpeg", use_container_width=True)
     except FileNotFoundError:
@@ -208,7 +226,6 @@ elif modo == "📅 Modo Plan de Estudio":
 elif modo == "📄 Modo Lector de Documentos":
     st.title("📄 Lector Inteligente de Ciel")
     
-    # Banner de análisis astrofísico / reporte técnico
     try:
         st.image("banner_lector.jpeg.jpeg", use_container_width=True)
     except FileNotFoundError:
@@ -248,7 +265,6 @@ elif modo == "📄 Modo Lector de Documentos":
 elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de Exámenes")
 
-    # Banner de examen tecnológico / sistemas cósmicos
     try:
         st.image("banner_examen.jpeg.jpeg", use_container_width=True)
     except FileNotFoundError:
