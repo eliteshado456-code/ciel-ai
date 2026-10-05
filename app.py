@@ -180,9 +180,9 @@ if modo == "🤖 Modo IA (Tutor)":
 elif modo == "📅 Modo Plan de Estudio":
     st.title("📅 Planificador de Ciel")
     
-    # Imagen personalizada 'a.jpeg' (Calendario Holográfico)
+    # Banner de calendario holográfico
     try:
-        st.image("a.jpeg", use_container_width=True)
+        st.image("banner_calendario.jpeg.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
     
@@ -208,9 +208,9 @@ elif modo == "📅 Modo Plan de Estudio":
 elif modo == "📄 Modo Lector de Documentos":
     st.title("📄 Lector Inteligente de Ciel")
     
-    # Imagen personalizada 'c.jpeg' (Reporte Técnico / Análisis Astrofísico)
+    # Banner de análisis astrofísico / reporte técnico
     try:
-        st.image("c.jpeg", use_container_width=True)
+        st.image("banner_lector.jpeg.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
         
@@ -248,9 +248,9 @@ elif modo == "📄 Modo Lector de Documentos":
 elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de Exámenes")
 
-    # Imagen personalizada 'b.jpeg' (Examen Tecnológico / Sistemas Cósmicos)
+    # Banner de examen tecnológico / sistemas cósmicos
     try:
-        st.image("b.jpeg", use_container_width=True)
+        st.image("banner_examen.jpeg.jpeg", use_container_width=True)
     except FileNotFoundError:
         pass
 
