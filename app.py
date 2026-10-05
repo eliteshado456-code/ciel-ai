@@ -220,11 +220,6 @@ if modo == "🤖 Modo IA (Tutor)":
 elif modo == "📅 Modo Plan de Estudio":
     st.title("📅 Planificador de Ciel")
     
-    try:
-        st.image("banner_calendario.jpeg", use_container_width=True)
-    except FileNotFoundError:
-        pass
-    
     col1, col2 = st.columns(2)
     with col1:
         materia = st.text_input("Materia o Examen:")
@@ -246,11 +241,6 @@ elif modo == "📅 Modo Plan de Estudio":
 # ==========================================
 elif modo == "📄 Modo Lector de Documentos":
     st.title("📄 Lector Inteligente de Ciel")
-    
-    try:
-        st.image("banner_lector.jpeg", use_container_width=True)
-    except FileNotFoundError:
-        pass
         
     uploaded_file = st.file_uploader("Sube tu archivo (PDF o TXT)", type=["pdf", "txt"])
 
@@ -285,11 +275,6 @@ elif modo == "📄 Modo Lector de Documentos":
 # ==========================================
 elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de Exámenes")
-
-    try:
-        st.image("banner_examen.jpeg", use_container_width=True)
-    except FileNotFoundError:
-        pass
 
     col1, col2 = st.columns(2)
     with col1:
