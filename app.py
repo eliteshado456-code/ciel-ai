@@ -148,12 +148,7 @@ modo = st.session_state.modo
 # ==========================================
 def hablar_con_ciel(texto):
     try:
-        # Limpiar un poco los emojis o caracteres especiales para que la voz no se interrumpa
         texto_limpio = re.sub(r'[🌟✨🤖💬📄📅📝⚠️👤]', '', texto)
-        
-        # Añadir pausas naturales en los signos de puntuación clave si es necesario
-        # gTTS respeta nativamente los puntos y comas haciendo pausas sutiles.
-        
         tts = gTTS(text=texto_limpio, lang='es', slow=False)
         audio_file = "ciel_voz.mp3"
         tts.save(audio_file)
@@ -184,7 +179,7 @@ def consultar_huggingface(mensajes_streamlit):
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"⚠️ Error al conectar con Hugging Face: {e}"
+        return f"⚠️️ Error al conectar con Hugging Face: {e}"
 
 def consultar_hf_prompt(prompt_texto):
     mensajes_temp = [{"role": "user", "content": prompt_texto}]
@@ -194,7 +189,11 @@ def consultar_hf_prompt(prompt_texto):
 # 1. MODO IA (Tutor Conversacional)
 # ==========================================
 if modo == "🤖 Modo IA (Tutor)":
-    st.title("Hola, soy Ciel 👋")
+    # Mostramos tu nueva imagen de fondo principal como bienvenida visual
+    try:
+        st.image("fondo_ciel.jpg", use_container_width=True)
+    except FileNotFoundError:
+        st.title("Hola, soy Ciel 👋")
     
     if "messages" not in st.session_state:
         st.session_state.messages = []
