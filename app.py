@@ -158,10 +158,11 @@ def consultar_huggingface(mensajes_streamlit):
     if not client:
         return "⚠️ Falta configurar el token de Hugging Face en las variables de entorno de Render (`HUGGINGFACE_API_KEY`)."
     
+    # Instrucción mejorada para que Ciel reconozca y explique todo tipo de signos, símbolos y constelaciones
     mensajes_completos = [
         {
             "role": "system", 
-            "content": "Eres Ciel, un tutor académico amigable, paciente y empático. Guía a los estudiantes mediante explicaciones claras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+            "content": "Eres Ciel, un tutor académico amigable, paciente, empático y experto en astronomía, astrofísica, constelaciones, simbología científica y todo tipo de signos y señales. Guía a los estudiantes explicando con claridad cualquier signo, símbolo, constelación o concepto que te consulten. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
         }
     ]
     
@@ -197,13 +198,13 @@ if modo == "🤖 Modo IA (Tutor)":
         with st.chat_message(msg["role"], avatar=avatar_a_usar):
             st.markdown(msg["content"])
 
-    if prompt := st.chat_input("Escribe tu duda aquí..."):
+    if prompt := st.chat_input("Escribe tu duda o pregúntale a Ciel sobre cualquier signo o símbolo..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user", avatar="👤"):
             st.markdown(prompt)
 
         with st.chat_message("assistant", avatar=icono_ciel):
-            with st.spinner("Ciel está pensando..."):
+            with st.spinner("Ciel está analizando los signos..."):
                 try:
                     respuesta_texto = consultar_huggingface(st.session_state.messages)
                     st.markdown(respuesta_texto)
@@ -246,7 +247,7 @@ elif modo == "📄 Modo Lector de Documentos":
 
     if uploaded_file is not None:
         st.success(f"¡'{uploaded_file.name}' cargado correctamente!")
-        pregunta_doc = st.text_input("¿Qué quieres que te explique o resuma del documento?")
+        pregunta_doc = st.text_input("¿Qué quieres que te explique, analice o reconozca del documento?")
         
         if st.button("🔍 Consultar documento"):
             if pregunta_doc:
