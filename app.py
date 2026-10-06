@@ -162,6 +162,7 @@ modo = st.session_state.modo
 # ==========================================
 def hablar_con_ciel(texto):
     try:
+        # Limpiamos emojis y caracteres especiales para que la voz suene limpia y fluida
         texto_limpio = re.sub(r'[🌟✨🤖💬📄📅📝⚠️👤]', '', texto)
         tts = gTTS(text=texto_limpio, lang='es', slow=False)
         audio_file = "ciel_voz.mp3"
@@ -177,7 +178,7 @@ def consultar_huggingface(mensajes_streamlit):
     mensajes_completos = [
         {
             "role": "system", 
-            "content": "Eres Ciel, un tutor académico amigable, paciente, empático y experto en astronomía, astrofísica, constelaciones, simbología científica y todo tipo de signos. Estructura tus respuestas usando pausas claras y puntuación adecuada para que al ser leídas en voz alta suenen suaves, armónicas y naturales. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+            "content": "Eres Ciel, un tutor académico sumamente dulce, empático, afectuoso y de voz suave. Experto en astronomía, astrofísica, constelaciones y simbología. Al redactar tus respuestas, utiliza oraciones cortas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser leídas en voz alta suenen extremadamente armónicas, tersas y acogedoras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
         }
     ]
     
