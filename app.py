@@ -17,7 +17,7 @@ except FileNotFoundError:
     except FileNotFoundError:
         icono_ciel = "🌟"
 
-st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_ciel, layout="wide")
+st.set_page_config(page_title="Ciel - Tu Asistente Estelar", page_icon=icono_ciel, layout="wide")
 
 # ==========================================
 # ESTADO DE NAVEGACIÓN
@@ -37,7 +37,7 @@ else:
     client = None
 
 # ==========================================
-# CSS PERSONALIZADO: ESTELAR Y ADAPTADO A MÓVILES
+# CSS PERSONALIZADO: ESTELAR Y MÓVIL
 # ==========================================
 st.markdown("""
 <style>
@@ -46,14 +46,12 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Fondo general con efecto estelar y ciberespacial */
     .stApp {
         background: radial-gradient(circle at 50% 50%, #0d1b2a 0%, #0b0914 70%, #030208 100%);
         color: #e2e8f0;
         font-family: 'Poppins', sans-serif !important;
     }
     
-    /* Menú lateral tecnológico */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, rgba(11, 15, 25, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
         backdrop-filter: blur(15px);
@@ -61,7 +59,6 @@ st.markdown("""
         box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
     }
     
-    /* Tipografías con estilo futurista */
     h1, h2, h3 {
         font-family: 'Orbitron', sans-serif !important;
         color: #38bdf8 !important;
@@ -70,7 +67,6 @@ st.markdown("""
         text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
     }
     
-    /* Botones estilo panel de control espacial */
     .stButton>button {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: #38bdf8 !important;
@@ -92,7 +88,6 @@ st.markdown("""
         box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
     }
     
-    /* Entradas de texto y selectores futuristas */
     .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
         background-color: rgba(15, 23, 42, 0.8);
         color: #38bdf8;
@@ -100,12 +95,7 @@ st.markdown("""
         border: 1px solid rgba(56, 189, 248, 0.3);
         font-family: 'Poppins', sans-serif;
     }
-    .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
-        border-color: #38bdf8;
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-    }
     
-    /* Cajas de chat estilo holográfico */
     [data-testid="stChatMessage"] {
         background: rgba(15, 23, 42, 0.6);
         border-radius: 16px;
@@ -116,7 +106,6 @@ st.markdown("""
         backdrop-filter: blur(4px);
     }
     
-    /* Barra inferior de entrada de chat estilo panel tecnológico */
     [data-testid="stChatInput"] {
         background-color: rgba(15, 23, 42, 0.9) !important;
         border-radius: 16px !important;
@@ -124,20 +113,10 @@ st.markdown("""
         box-shadow: 0 0 20px rgba(56, 189, 248, 0.2) !important;
     }
 
-    /* ========================================== */
-    /* AJUSTES RESPONSIVOS PARA MÓVILES          */
-    /* ========================================== */
     @media (max-width: 768px) {
-        h1 {
-            font-size: 1.4rem !important;
-        }
-        h2 {
-            font-size: 1.2rem !important;
-        }
-        .stButton>button {
-            padding: 0.5rem 1rem;
-            font-size: 11px;
-        }
+        h1 { font-size: 1.4rem !important; }
+        h2 { font-size: 1.2rem !important; }
+        .stButton>button { padding: 0.5rem 1rem; font-size: 11px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -164,25 +143,26 @@ if st.sidebar.button("📅 Planificador Cuántico"):
     st.session_state.modo = "📅 Modo Plan de Estudio"
 
 st.sidebar.markdown("---")
-if st.sidebar.button("📄 Lector de Datos"):
+if st.sidebar.button("📄 Lector de datos y archivo estelar"):
     st.session_state.modo = "📄 Modo Lector de Documentos"
 
 st.sidebar.markdown("---")
-if st.sidebar.button("📝 Simulador de Pruebas"):
+if st.sidebar.button("📝 Simulador de prueba cósmico"):
     st.session_state.modo = "📝 Modo Creador de Exámenes"
 
 st.sidebar.markdown("---")
 activar_voz = st.sidebar.checkbox("🔊 Canal de Voz Activo", value=True)
 
-# Capturamos el modo actual de la sesión
 modo = st.session_state.modo
 
 # ==========================================
-# FUNCIONES NÚCLEO
+# FUNCIONES NÚCLEO CON VOZ PERSONALIZADA
 # ==========================================
 def hablar_con_ciel(texto):
     try:
+        # Filtramos símbolos para mantener una lectura limpia, suave y digital
         texto_limpio = re.sub(r'[🌟✨🤖💬📄📅📝⚠️👤]', '', texto)
+        # slow=False mantiene la fluidez tecnológica y armónica
         tts = gTTS(text=texto_limpio, lang='es', slow=False)
         audio_file = "ciel_voz.mp3"
         tts.save(audio_file)
@@ -197,7 +177,7 @@ def consultar_huggingface(mensajes_streamlit):
     mensajes_completos = [
         {
             "role": "system", 
-            "content": "Eres Ciel, un tutor académico y guía universitario sumamente dulce, empático, afectuoso y de voz muy suave. Experto en orientar a estudiantes paso a paso para que no se les compliquen los procesos de inscripción universitaria o portales web. Al redactar tus respuestas, utiliza oraciones cortas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser leídas en voz alta suenen extremadamente armónicas, tersas y acogedoras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+            "content": "Eres Ciel, una inteligencia artificial de asistencia estelar con una identidad única, sumamente dulce, empática, sofisticada y de voz muy suave con un sutil toque tecnológico. Tu propósito es guiar con paciencia absoluta a los estudiantes universitarios. Al redactar tus respuestas, utiliza un vocabulario elegante pero cercano, oraciones rítmicas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser sintetizadas en voz alta suenen extremadamente armónicas, tersas, acogedoras y con un matiz cibernético único. Firma siempre tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
         }
     ]
     
@@ -252,7 +232,7 @@ if modo == "🤖 Modo IA (Tutor)":
                     st.error(f"⚠️ Error: {e}")
 
 # ==========================================
-# 2. MODO AYUDANTE ESTELAR (Inscripción)
+# 2. AYUDANTE ESTELAR (Inscripción Paso a Paso)
 # ==========================================
 elif modo == "🌟 Ayudante Estelar":
     st.title("🌟 Ayudante Estelar — Guía de Inscripción")
@@ -266,8 +246,8 @@ elif modo == "🌟 Ayudante Estelar":
 
     if st.button("🚀 Generar Guía Paso a Paso"):
         if universidad and paso_actual:
-            with st.spinner("Ciel está preparando tu ruta de inscripción..."):
-                prompt_inscripcion = f"Actúa como un guía universitario muy paciente, detallista y dulce. El estudiante necesita ayuda con su proceso de inscripción en la universidad o sistema '{universidad}', específicamente en este punto o duda: '{paso_actual}'. Explícale paso a paso, con claridad absoluta, tono afectivo y de manera muy sencilla qué debe hacer para no equivocarse."
+            with st.spinner("Ciel está preparando tu ruta de inscripción estelar..."):
+                prompt_inscripcion = f"Actúa como Ciel, una IA de voz suave y toque tecnológico. El estudiante necesita ayuda con su proceso de inscripción en la universidad o sistema '{universidad}', específicamente en este punto: '{paso_actual}'. Explícale paso a paso, con claridad absoluta, tono afectivo y de manera muy sencilla qué debe hacer para no equivocarse."
                 respuesta = consultar_hf_prompt(prompt_inscripcion)
                 st.markdown("### 🌟 Orientación de Ciel:")
                 st.markdown(respuesta)
@@ -302,7 +282,7 @@ elif modo == "📅 Modo Plan de Estudio":
             st.warning("Debe ingresar la materia o examen.")
 
 # ==========================================
-# 4. MODO LECTOR DE DOCUMENTOS
+# 4. MODO LECTOR DE DATOS Y ARCHIVO ESTELAR
 # ==========================================
 elif modo == "📄 Modo Lector de Documentos":
     st.title("📄 Lector de datos y archivo estelar")
@@ -339,7 +319,7 @@ elif modo == "📄 Modo Lector de Documentos":
                 st.warning("Ingrese una consulta sobre el documento.")
 
 # ==========================================
-# 5. MODO CREADOR DE EXÁMENES
+# 5. SIMULADOR DE PRUEBA CÓSMICO
 # ==========================================
 elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de prueba cósmico")
