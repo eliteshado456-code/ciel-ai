@@ -162,7 +162,6 @@ modo = st.session_state.modo
 # ==========================================
 def hablar_con_ciel(texto):
     try:
-        # Limpiamos emojis y caracteres especiales para que la voz suene limpia y fluida
         texto_limpio = re.sub(r'[🌟✨🤖💬📄📅📝⚠️👤]', '', texto)
         tts = gTTS(text=texto_limpio, lang='es', slow=False)
         audio_file = "ciel_voz.mp3"
@@ -178,7 +177,7 @@ def consultar_huggingface(mensajes_streamlit):
     mensajes_completos = [
         {
             "role": "system", 
-            "content": "Eres Ciel, un tutor académico sumamente dulce, empático, afectuoso y de voz suave. Experto en astronomía, astrofísica, constelaciones y simbología. Al redactar tus respuestas, utiliza oraciones cortas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser leídas en voz alta suenen extremadamente armónicas, tersas y acogedoras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+            "content": "Eres Ciel, un tutor académico sumamente dulce, empático, afectuoso y de voz muy suave. Experto en astronomía, astrofísica, constelaciones y simbología. Al redactar tus respuestas, utiliza oraciones cortas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser leídas en voz alta suenen extremadamente armónicas, tersas y acogedoras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
         }
     ]
     
@@ -259,7 +258,7 @@ elif modo == "📅 Modo Plan de Estudio":
 # 3. MODO LECTOR DE DOCUMENTOS
 # ==========================================
 elif modo == "📄 Modo Lector de Documentos":
-    st.title("📄 Lector de Datos y Archivos")
+    st.title("📄 Lector de datos y archivo estelar")
     st.markdown("<p style='color: #94a3b8;'>Análisis estelar de contenido documental (PDF / TXT).</p>", unsafe_allow_html=True)
         
     uploaded_file = st.file_uploader("Cargue su archivo de texto o PDF", type=["pdf", "txt"])
@@ -294,7 +293,7 @@ elif modo == "📄 Modo Lector de Documentos":
 # 4. MODO CREADOR DE EXÁMENES
 # ==========================================
 elif modo == "📝 Modo Creador de Exámenes":
-    st.title("📝 Simulador de Pruebas Estelares")
+    st.title("📝 Simulador de prueba cósmico")
     st.markdown("<p style='color: #94a3b8;'>Generación avanzada de reactivos y evaluaciones de conocimiento.</p>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
