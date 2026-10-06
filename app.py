@@ -25,8 +25,6 @@ st.set_page_config(page_title="Ciel - Tu Asistente de Estudio", page_icon=icono_
 if 'modo' not in st.session_state:
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
-modo = st.session_state.modo
-
 # ==========================================
 # CONEXIÓN A HUGGING FACE API (INFERENCE CLIENT)
 # ==========================================
@@ -140,25 +138,24 @@ st.sidebar.markdown("---")
 
 if st.sidebar.button("💬 Interfaz Tutor IA"):
     st.session_state.modo = "🤖 Modo IA (Tutor)"
-    st.rerun()
 
 st.sidebar.markdown("---")
 if st.sidebar.button("📅 Planificador Cuántico"):
     st.session_state.modo = "📅 Modo Plan de Estudio"
-    st.rerun()
 
 st.sidebar.markdown("---")
 if st.sidebar.button("📄 Lector de Datos"):
     st.session_state.modo = "📄 Modo Lector de Documentos"
-    st.rerun()
 
 st.sidebar.markdown("---")
 if st.sidebar.button("📝 Simulador de Pruebas"):
     st.session_state.modo = "📝 Modo Creador de Exámenes"
-    st.rerun()
 
 st.sidebar.markdown("---")
 activar_voz = st.sidebar.checkbox("🔊 Canal de Voz Activo", value=True)
+
+# Capturamos el modo actual de la sesión
+modo = st.session_state.modo
 
 # ==========================================
 # FUNCIONES NÚCLEO
