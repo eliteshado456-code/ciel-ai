@@ -156,6 +156,10 @@ if st.sidebar.button("💬 Interfaz Tutor IA"):
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 st.sidebar.markdown("---")
+if st.sidebar.button("🌟 Ayudante Estelar"):
+    st.session_state.modo = "🌟 Ayudante Estelar"
+
+st.sidebar.markdown("---")
 if st.sidebar.button("📅 Planificador Cuántico"):
     st.session_state.modo = "📅 Modo Plan de Estudio"
 
@@ -193,7 +197,7 @@ def consultar_huggingface(mensajes_streamlit):
     mensajes_completos = [
         {
             "role": "system", 
-            "content": "Eres Ciel, un tutor académico sumamente dulce, empático, afectuoso y de voz muy suave. Experto en astronomía, astrofísica, constelaciones y simbología. Al redactar tus respuestas, utiliza oraciones cortas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser leídas en voz alta suenen extremadamente armónicas, tersas y acogedoras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+            "content": "Eres Ciel, un tutor académico y guía universitario sumamente dulce, empático, afectuoso y de voz muy suave. Experto en orientar a estudiantes paso a paso para que no se les compliquen los procesos de inscripción universitaria o portales web. Al redactar tus respuestas, utiliza oraciones cortas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser leídas en voz alta suenen extremadamente armónicas, tersas y acogedoras. Firma tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
         }
     ]
     
@@ -248,7 +252,32 @@ if modo == "🤖 Modo IA (Tutor)":
                     st.error(f"⚠️ Error: {e}")
 
 # ==========================================
-# 2. MODO PLAN DE ESTUDIO
+# 2. MODO AYUDANTE ESTELAR (Inscripción)
+# ==========================================
+elif modo == "🌟 Ayudante Estelar":
+    st.title("🌟 Ayudante Estelar — Guía de Inscripción")
+    st.markdown("<p style='color: #94a3b8;'>Orientación paso a paso para facilitar tus trámites y procesos de inscripción universitaria sin complicaciones.</p>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        universidad = st.text_input("Universidad o Sistema Web (Ej. UNEFA / SICEU):")
+    with col2:
+        paso_actual = st.text_input("¿En qué parte o paso tienes dudas?:")
+
+    if st.button("🚀 Generar Guía Paso a Paso"):
+        if universidad and paso_actual:
+            with st.spinner("Ciel está preparando tu ruta de inscripción..."):
+                prompt_inscripcion = f"Actúa como un guía universitario muy paciente, detallista y dulce. El estudiante necesita ayuda con su proceso de inscripción en la universidad o sistema '{universidad}', específicamente en este punto o duda: '{paso_actual}'. Explícale paso a paso, con claridad absoluta, tono afectivo y de manera muy sencilla qué debe hacer para no equivocarse."
+                respuesta = consultar_hf_prompt(prompt_inscripcion)
+                st.markdown("### 🌟 Orientación de Ciel:")
+                st.markdown(respuesta)
+                if activar_voz:
+                    hablar_con_ciel(respuesta)
+        else:
+            st.warning("Por favor, completa ambos campos para que Ciel pueda guiarte con precisión.")
+
+# ==========================================
+# 3. MODO PLAN DE ESTUDIO
 # ==========================================
 elif modo == "📅 Modo Plan de Estudio":
     st.title("📅 Planificador Cuántico")
@@ -267,11 +296,13 @@ elif modo == "📅 Modo Plan de Estudio":
                 prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
                 respuesta = consultar_hf_prompt(prompt_plan)
                 st.markdown(respuesta)
+                if activar_voz:
+                    hablar_con_ciel(respuesta)
         else:
             st.warning("Debe ingresar la materia o examen.")
 
 # ==========================================
-# 3. MODO LECTOR DE DOCUMENTOS
+# 4. MODO LECTOR DE DOCUMENTOS
 # ==========================================
 elif modo == "📄 Modo Lector de Documentos":
     st.title("📄 Lector de datos y archivo estelar")
@@ -300,13 +331,15 @@ elif modo == "📄 Modo Lector de Documentos":
                         respuesta = consultar_hf_prompt(prompt_doc)
                         st.markdown("### 💡 Diagnóstico de Ciel:")
                         st.markdown(respuesta)
+                        if activar_voz:
+                            hablar_con_ciel(respuesta)
                     except Exception as e:
                         st.error(f"Error al procesar el archivo: {e}")
             else:
                 st.warning("Ingrese una consulta sobre el documento.")
 
 # ==========================================
-# 4. MODO CREADOR DE EXÁMENES
+# 5. MODO CREADOR DE EXÁMENES
 # ==========================================
 elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de prueba cósmico")
@@ -327,5 +360,7 @@ elif modo == "📝 Modo Creador de Exámenes":
                 respuesta = consultar_hf_prompt(prompt_examen)
                 st.markdown("### 📝 Evaluación Generada:")
                 st.markdown(respuesta)
+                if activar_voz:
+                    hablar_con_ciel(respuesta)
         else:
             st.warning("¡Debe especificar el tema de la evaluación!")
