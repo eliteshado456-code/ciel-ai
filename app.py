@@ -37,7 +37,7 @@ else:
     client = None
 
 # ==========================================
-# CSS PERSONALIZADO: ESTILO TECNOLÓGICO Y ESTELAR
+# CSS PERSONALIZADO: ESTELAR Y ADAPTADO A MÓVILES
 # ==========================================
 st.markdown("""
 <style>
@@ -122,6 +122,22 @@ st.markdown("""
         border-radius: 16px !important;
         border: 1px solid rgba(56, 189, 248, 0.4) !important;
         box-shadow: 0 0 20px rgba(56, 189, 248, 0.2) !important;
+    }
+
+    /* ========================================== */
+    /* AJUSTES RESPONSIVOS PARA MÓVILES          */
+    /* ========================================== */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.4rem !important;
+        }
+        h2 {
+            font-size: 1.2rem !important;
+        }
+        .stButton>button {
+            padding: 0.5rem 1rem;
+            font-size: 11px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
