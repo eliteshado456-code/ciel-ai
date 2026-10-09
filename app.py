@@ -26,13 +26,12 @@ if 'modo' not in st.session_state:
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 # ==========================================
-# CONEXIÓN A HUGGING FACE API (PROVEEDOR GRATUITO)
+# CONEXIÓN A HUGGING FACE API
 # ==========================================
 hf_token = os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
 
 if hf_token:
-    # Configuramos el cliente con el proveedor serverless gratuito de Hugging Face
-    client = InferenceClient(provider="hf-inference", api_key=hf_token)
+    client = InferenceClient(api_key=hf_token)
     MODEL_NAME = "google/gemma-2-2b-it"
 else:
     client = None
