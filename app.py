@@ -26,14 +26,14 @@ if 'modo' not in st.session_state:
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 # ==========================================
-# CONEXIÓN A HUGGING FACE API (MODELO QWEN LIBRE)
+# CONEXIÓN A HUGGING FACE API (ENRUTADOR COMPATIBLE)
 # ==========================================
 hf_token = os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
 
 if hf_token:
     client = InferenceClient(api_key=hf_token)
-    # Modelo con soporte activo en el enrutador gratuito actual de Hugging Face
-    MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
+    # Modelo con enrutamiento compatible en la API unificada de Hugging Face
+    MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 else:
     client = None
 
