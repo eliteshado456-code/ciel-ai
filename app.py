@@ -160,9 +160,7 @@ modo = st.session_state.modo
 # ==========================================
 def hablar_con_ciel(texto):
     try:
-        # Filtramos símbolos para mantener una lectura limpia, suave y digital
         texto_limpio = re.sub(r'[🌟✨🤖💬📄📅📝⚠️👤]', '', texto)
-        # slow=False mantiene la fluidez tecnológica y armónica
         tts = gTTS(text=texto_limpio, lang='es', slow=False)
         audio_file = "ciel_voz.mp3"
         tts.save(audio_file)
@@ -319,11 +317,11 @@ elif modo == "📄 Modo Lector de Documentos":
                 st.warning("Ingrese una consulta sobre el documento.")
 
 # ==========================================
-# 5. SIMULADOR DE PRUEBA CÓSMICO
+# 5. SIMULADOR DE PRUEBA CÓSMICO (CON LÍMITE DE TIEMPO)
 # ==========================================
 elif modo == "📝 Modo Creador de Exámenes":
     st.title("📝 Simulador de prueba cósmico")
-    st.markdown("<p style='color: #94a3b8;'>Generación avanzada de reactivos y evaluaciones de conocimiento.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8;'>Generación avanzada de reactivos y evaluaciones cronometradas.</p>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -331,16 +329,17 @@ elif modo == "📝 Modo Creador de Exámenes":
         dificultad = st.selectbox("Nivel de calibración:", ["Básico", "Intermedio", "Universitario / Avanzado"])
     with col2:
         num_preguntas = st.slider("Cantidad de reactivos:", 3, 10, 5)
+        tiempo_limite = st.slider("Tiempo límite para resolver (minutos):", 1, 30, 10)
         tipo_preguntas = st.selectbox("Formato de evaluación:", ["Opción múltiple", "Verdadero o Falso", "Preguntas de Desarrollo"])
 
-    if st.button("🚀 Generar Evaluación"):
+    if st.button("🚀 Iniciar Evaluación Cronometrada"):
         if tema_examen:
-            with st.spinner("Generando reactivos de evaluación..."):
-                prompt_examen = f"Crea un examen de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' (Dificultad: {dificultad}). Pon las preguntas primero y al final las respuestas."
+            with st.spinner("Generando evaluación y calibrando temporizador estelar..."):
+                prompt_examen = f"Crea un examen cronometrado de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' con un límite de tiempo de {tiempo_limite} minutos (Dificultad: {dificultad}). Incluye una introducción motivadora indicando el tiempo límite asignado, presenta las preguntas numeradas claramente, y coloca las respuestas correctas al final del todo separadas por una sección oculta o clara."
                 respuesta = consultar_hf_prompt(prompt_examen)
-                st.markdown("### 📝 Evaluación Generada:")
+                st.markdown(f"### ⏱️ Evaluación Estelar Activa (Límite: {tiempo_limite} minutos)")
                 st.markdown(respuesta)
                 if activar_voz:
-                    hablar_con_ciel(respuesta)
+                    hablar_con_ciel(f"Evaluación iniciada. Cuentas con {tiempo_limite} minutos para resolverla. ¡Mucho éxito!")
         else:
             st.warning("¡Debe especificar el tema de la evaluación!")
