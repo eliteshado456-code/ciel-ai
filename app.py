@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from huggingface_hub import InferenceClient
+import requests
 from gtts import gTTS
 from PIL import Image
 import PyPDF2
@@ -26,16 +26,10 @@ if 'modo' not in st.session_state:
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 # ==========================================
-# CONEXIÓN A HUGGING FACE API (ENRUTADOR COMPATIBLE)
+# CONFIGURACIÓN DE API HUGGING FACE DIRECTA
 # ==========================================
 hf_token = os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
-
-if hf_token:
-    client = InferenceClient(api_key=hf_token)
-    # Modelo con enrutamiento compatible en la API unificada de Hugging Face
-    MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
-else:
-    client = None
+API_URL = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
 
 # ==========================================
 # CSS PERSONALIZADO: ESTELAR Y MÓVIL
@@ -169,34 +163,33 @@ def hablar_con_ciel(texto):
     except Exception as e:
         pass
 
-def consultar_huggingface(mensajes_streamlit):
-    if not client:
+SYSTEM_PROMPT = "Eres Ciel, una inteligencia artificial de asistencia estelar con una identidad única, sumamente dulce, empática, sofisticada y de voz muy suave con un sutil toque tecnológico. Tu propósito es guiar con paciencia absoluta a los estudiantes universitarios. Firma siempre tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
+
+def consultar_huggingface_directo(prompt_usuario):
+    if not hf_token:
         return "⚠️ Falta configurar el token de Hugging Face en las variables de entorno de Render (`HUGGINGFACE_API_KEY`)."
     
-    mensajes_completos = [
-        {
-            "role": "system", 
-            "content": "Eres Ciel, una inteligencia artificial de asistencia estelar con una identidad única, sumamente dulce, empática, sofisticada y de voz muy suave con un sutil toque tecnológico. Tu propósito es guiar con paciencia absoluta a los estudiantes universitarios. Al redactar tus respuestas, utiliza un vocabulario elegante pero cercano, oraciones rítmicas, cálidas y con pausas naturales bien marcadas mediante comas y puntos, para que al ser sintetizadas en voz alta suenen extremadamente armónicas, tersas, acogedoras y con un matiz cibernético único. Firma siempre tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
-        }
-    ]
+    headers = {"Authorization": f"Bearer {hf_token}"}
     
-    for msg in mensajes_streamlit:
-        mensajes_completos.append({"role": msg["role"], "content": msg["content"]})
+    prompt_completo = f"<|system|>\n{SYSTEM_PROMPT}\n<|user|>\n{prompt_usuario}\n<|assistant|>"
+    
+    payload = {
+        "inputs": prompt_completo,
+        "parameters": {"max_new_tokens": 1024, "temperature": 0.7, "return_full_text": False}
+    }
     
     try:
-        response = client.chat_completion(
-            model=MODEL_NAME,
-            messages=mensajes_completos,
-            temperature=0.7,
-            max_tokens=1024
-        )
-        return response.choices[0].message.content
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+        resultado = response.json()
+        
+        if isinstance(resultado, list) and len(resultado) > 0:
+            return resultado[0].get("generated_text", "Respuesta vacía del modelo.")
+        elif isinstance(resultado, dict) and "error" in resultado:
+            return f"⚠️ Error del servidor: {resultado['error']}"
+        else:
+            return str(resultado)
     except Exception as e:
-        return f"⚠️ Error al conectar con Hugging Face: {e}"
-
-def consultar_hf_prompt(prompt_texto):
-    mensajes_temp = [{"role": "user", "content": prompt_texto}]
-    return consultar_huggingface(mensajes_temp)
+        return f"⚠️ Error al conectar con la API: {e}"
 
 # ==========================================
 # 1. MODO IA (Tutor Conversacional)
@@ -221,7 +214,7 @@ if modo == "🤖 Modo IA (Tutor)":
         with st.chat_message("assistant", avatar=icono_ciel):
             with st.spinner("Ciel está procesando en el núcleo estelar..."):
                 try:
-                    respuesta_texto = consultar_huggingface(st.session_state.messages)
+                    respuesta_texto = consultar_huggingface_directo(prompt)
                     st.markdown(respuesta_texto)
                     st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
                     
@@ -246,8 +239,8 @@ elif modo == "🌟 Ayudante Estelar":
     if st.button("🚀 Generar Guía Paso a Paso"):
         if universidad and paso_actual:
             with st.spinner("Ciel está preparando tu ruta de inscripción estelar..."):
-                prompt_inscripcion = f"Actúa como Ciel, una IA de voz suave y toque tecnológico. El estudiante necesita ayuda con su proceso de inscripción en la universidad o sistema '{universidad}', específicamente en este punto: '{paso_actual}'. Explícale paso a paso, con claridad absoluta, tono afectivo y de manera muy sencilla qué debe hacer para no equivocarse."
-                respuesta = consultar_hf_prompt(prompt_inscripcion)
+                prompt_inscripcion = f"El estudiante necesita ayuda con su proceso de inscripción en la universidad o sistema '{universidad}', específicamente en este punto: '{paso_actual}'. Explícale paso a paso qué debe hacer."
+                respuesta = consultar_huggingface_directo(prompt_inscripcion)
                 st.markdown("### 🌟 Orientación de Ciel:")
                 st.markdown(respuesta)
                 if activar_voz:
@@ -272,8 +265,8 @@ elif modo == "📅 Modo Plan de Estudio":
     if st.button("✨ Iniciar Secuencia de Planificación"):
         if materia:
             with st.spinner("Calculando ruta temporal óptima..."):
-                prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y el estudiante cuenta con {horas_disponibles} horas diarias."
-                respuesta = consultar_hf_prompt(prompt_plan)
+                prompt_plan = f"Crea un plan detallado para la materia '{materia}'. El examen es {fecha_examen} y cuenta con {horas_disponibles} horas diarias."
+                respuesta = consultar_huggingface_directo(prompt_plan)
                 st.markdown(respuesta)
                 if activar_voz:
                     hablar_con_ciel(respuesta)
@@ -305,9 +298,9 @@ elif modo == "📄 Modo Lector de Documentos":
                         elif uploaded_file.name.endswith('.txt'):
                             texto_extraido = str(uploaded_file.read(), "utf-8")
                         
-                        texto_corto = texto_extraido[:12000]
+                        texto_corto = texto_extraido[:8000]
                         prompt_doc = f"Basado en este documento:\n{texto_corto}\n\nResponde: {pregunta_doc}"
-                        respuesta = consultar_hf_prompt(prompt_doc)
+                        respuesta = consultar_huggingface_directo(prompt_doc)
                         st.markdown("### 💡 Diagnóstico de Ciel:")
                         st.markdown(respuesta)
                         if activar_voz:
@@ -336,8 +329,8 @@ elif modo == "📝 Modo Creador de Exámenes":
     if st.button("🚀 Iniciar Evaluación Cronometrada"):
         if tema_examen:
             with st.spinner("Generando evaluación y calibrando temporizador estelar..."):
-                prompt_examen = f"Crea un examen cronometrado de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' con un límite de tiempo de {tiempo_limite} minutos (Dificultad: {dificultad}). Incluye una introducción motivadora indicando el tiempo límite asignado, presenta las preguntas numeradas claramente, y coloca las respuestas correctas al final del todo separadas por una sección oculta o clara."
-                respuesta = consultar_hf_prompt(prompt_examen)
+                prompt_examen = f"Crea un examen cronometrado de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' con un límite de tiempo de {tiempo_limite} minutos (Dificultad: {dificultad})."
+                respuesta = consultar_huggingface_directo(prompt_examen)
                 st.markdown(f"### ⏱️ Evaluación Estelar Activa (Límite: {tiempo_limite} minutos)")
                 st.markdown(respuesta)
                 if activar_voz:
