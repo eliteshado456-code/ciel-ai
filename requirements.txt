@@ -1,5 +1,5 @@
 streamlit
-huggingface_hub
+google-genai
 gTTS
 pillow
 PyPDF2
