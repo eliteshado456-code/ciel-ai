@@ -32,7 +32,7 @@ hf_token = os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
 API_URL = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
 
 # ==========================================
-# CSS PERSONALIZADO: ESTELAR Y MÓVIL
+# CSS PERSONALIZADO: ESTELAR, MÓVIL Y REPRODUCTOR
 # ==========================================
 st.markdown("""
 <style>
@@ -108,6 +108,17 @@ st.markdown("""
         box-shadow: 0 0 20px rgba(56, 189, 248, 0.2) !important;
     }
 
+    /* ESTILO CLÁSICO ESTELAR PARA EL REPRODUCTOR DE AUDIO */
+    audio {
+        width: 100%;
+        height: 40px;
+        border-radius: 12px;
+        background-color: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+        margin-top: 10px;
+    }
+
     @media (max-width: 768px) {
         h1 { font-size: 1.4rem !important; }
         h2 { font-size: 1.2rem !important; }
@@ -146,22 +157,21 @@ if st.sidebar.button("📝 Simulador de prueba cósmico"):
     st.session_state.modo = "📝 Modo Creador de Exámenes"
 
 st.sidebar.markdown("---")
-activar_voz = st.sidebar.checkbox("🔊 Canal de Voz Activo", value=True)
+activar_voz = st.sidebar.checkbox("🔊 Habilitar Canal de Voz (Manual)", value=True)
 
 modo = st.session_state.modo
 
 # ==========================================
-# FUNCIONES NÚCLEO CON VOZ PERSONALIZADA
+# FUNCIONES NÚCLEO DE AUDIO Y IA
 # ==========================================
-def hablar_con_ciel(texto):
+def generar_audio_ciel(texto, filename="ciel_voz.mp3"):
     try:
         texto_limpio = re.sub(r'[🌟✨🤖💬📄📅📝⚠️👤]', '', texto)
         tts = gTTS(text=texto_limpio, lang='es', slow=False)
-        audio_file = "ciel_voz.mp3"
-        tts.save(audio_file)
-        st.audio(audio_file, format='audio/mp3', autoplay=True)
+        tts.save(filename)
+        return filename
     except Exception as e:
-        pass
+        return None
 
 SYSTEM_PROMPT = "Eres Ciel, una inteligencia artificial de asistencia estelar con una identidad única, sumamente dulce, empática, sofisticada y de voz muy suave con un sutil toque tecnológico. Tu propósito es guiar con paciencia absoluta a los estudiantes universitarios. Firma siempre tus respuestas con: '¡A seguir brillando y aprendiendo! 🌟 — Ciel'."
 
@@ -170,7 +180,6 @@ def consultar_huggingface_directo(prompt_usuario):
         return "⚠️ Falta configurar el token de Hugging Face en las variables de entorno de Render (`HUGGINGFACE_API_KEY`)."
     
     headers = {"Authorization": f"Bearer {hf_token}"}
-    
     prompt_completo = f"<|system|>\n{SYSTEM_PROMPT}\n<|user|>\n{prompt_usuario}\n<|assistant|>"
     
     payload = {
@@ -201,10 +210,13 @@ if modo == "🤖 Modo IA (Tutor)":
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    for msg in st.session_state.messages:
+    for idx, msg in enumerate(st.session_state.messages):
         avatar_a_usar = icono_ciel if msg["role"] == "assistant" else "👤"
         with st.chat_message(msg["role"], avatar=avatar_a_usar):
             st.markdown(msg["content"])
+            # Si el mensaje es de Ciel y hay audio guardado, mostrar el reproductor estelar
+            if msg["role"] == "assistant" and activar_voz and "audio_path" in msg:
+                st.audio(msg["audio_path"], format='audio/mp3')
 
     if prompt := st.chat_input("Transmita su consulta o símbolo al núcleo de Ciel..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -216,10 +228,17 @@ if modo == "🤖 Modo IA (Tutor)":
                 try:
                     respuesta_texto = consultar_huggingface_directo(prompt)
                     st.markdown(respuesta_texto)
-                    st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
                     
+                    audio_path = None
                     if activar_voz:
-                        hablar_con_ciel(respuesta_texto)
+                        audio_path = generar_audio_ciel(respuesta_texto, f"audio_{len(st.session_state.messages)}.mp3")
+                        st.audio(audio_path, format='audio/mp3')
+
+                    st.session_state.messages.append({
+                        "role": "assistant", 
+                        "content": respuesta_texto, 
+                        "audio_path": audio_path
+                    })
                 except Exception as e:
                     st.error(f"⚠️ Error: {e}")
 
@@ -244,7 +263,8 @@ elif modo == "🌟 Ayudante Estelar":
                 st.markdown("### 🌟 Orientación de Ciel:")
                 st.markdown(respuesta)
                 if activar_voz:
-                    hablar_con_ciel(respuesta)
+                    audio_file = generar_audio_ciel(respuesta, "audio_inscripcion.mp3")
+                    st.audio(audio_file, format='audio/mp3')
         else:
             st.warning("Por favor, completa ambos campos para que Ciel pueda guiarte con precisión.")
 
@@ -269,7 +289,8 @@ elif modo == "📅 Modo Plan de Estudio":
                 respuesta = consultar_huggingface_directo(prompt_plan)
                 st.markdown(respuesta)
                 if activar_voz:
-                    hablar_con_ciel(respuesta)
+                    audio_file = generar_audio_ciel(respuesta, "audio_plan.mp3")
+                    st.audio(audio_file, format='audio/mp3')
         else:
             st.warning("Debe ingresar la materia o examen.")
 
@@ -304,7 +325,8 @@ elif modo == "📄 Modo Lector de Documentos":
                         st.markdown("### 💡 Diagnóstico de Ciel:")
                         st.markdown(respuesta)
                         if activar_voz:
-                            hablar_con_ciel(respuesta)
+                            audio_file = generar_audio_ciel(respuesta, "audio_doc.mp3")
+                            st.audio(audio_file, format='audio/mp3')
                     except Exception as e:
                         st.error(f"Error al procesar el archivo: {e}")
             else:
@@ -334,6 +356,7 @@ elif modo == "📝 Modo Creador de Exámenes":
                 st.markdown(f"### ⏱️ Evaluación Estelar Activa (Límite: {tiempo_limite} minutos)")
                 st.markdown(respuesta)
                 if activar_voz:
-                    hablar_con_ciel(f"Evaluación iniciada. Cuentas con {tiempo_limite} minutos para resolverla. ¡Mucho éxito!")
+                    audio_file = generar_audio_ciel(f"Evaluación iniciada. Cuentas con {tiempo_limite} minutos para resolverla.", "audio_examen.mp3")
+                    st.audio(audio_file, format='audio/mp3')
         else:
             st.warning("¡Debe especificar el tema de la evaluación!")
