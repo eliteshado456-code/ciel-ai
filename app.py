@@ -26,12 +26,12 @@ if 'modo' not in st.session_state:
     st.session_state.modo = "🤖 Modo IA (Tutor)"
 
 # ==========================================
-# CONFIGURACIÓN DE API GOOGLE GEMINI
+# CONFIGURACIÓN DE API GOOGLE GEMINI (MODELO ACTUALIZADO)
 # ==========================================
 gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 if gemini_key:
     client = genai.Client(api_key=gemini_key)
-    MODEL_NAME = "gemini-2.5-flash"
+    MODEL_NAME = "gemini-3.8-flash"
 else:
     client = None
 
@@ -301,58 +301,4 @@ elif modo == "📄 Modo Lector de Documentos":
 
     if uploaded_file is not None:
         st.success(f"¡Archivo '{uploaded_file.name}' sincronizado con éxito!")
-        pregunta_doc = st.text_input("¿Qué parámetro o análisis requiere extraer del documento?")
-        
-        if st.button("🔍 Ejecutar Análisis Documental"):
-            if pregunta_doc:
-                with st.spinner("Extrayendo información del documento..."):
-                    try:
-                        texto_extraido = ""
-                        if uploaded_file.name.endswith('.pdf'):
-                            pdf_reader = PyPDF2.PdfReader(uploaded_file)
-                            for page in pdf_reader.pages:
-                                texto_extraido += page.extract_text() + "\n"
-                        elif uploaded_file.name.endswith('.txt'):
-                            texto_extraido = str(uploaded_file.read(), "utf-8")
-                        
-                        texto_corto = texto_extraido[:8000]
-                        prompt_doc = f"Basado en este documento:\n{texto_corto}\n\nResponde: {pregunta_doc}"
-                        respuesta = consultar_gemini(prompt_doc)
-                        st.markdown("### 💡 Diagnóstico de Ciel:")
-                        st.markdown(respuesta)
-                        if activar_voz:
-                            audio_file = generar_audio_ciel(respuesta, "audio_doc.mp3")
-                            st.audio(audio_file, format='audio/mp3')
-                    except Exception as e:
-                        st.error(f"Error al procesar el archivo: {e}")
-            else:
-                st.warning("Ingrese una consulta sobre el documento.")
-
-# ==========================================
-# 5. SIMULADOR DE PRUEBA CÓSMICO (CON LÍMITE DE TIEMPO)
-# ==========================================
-elif modo == "📝 Modo Creador de Exámenes":
-    st.title("📝 Simulador de prueba cósmico")
-    st.markdown("<p style='color: #94a3b8;'>Generación avanzada de reactivos y evaluaciones cronometradas.</p>", unsafe_allow_html=True)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        tema_examen = st.text_input("¿Sobre qué área temática se evaluará?")
-        dificultad = st.selectbox("Nivel de calibración:", ["Básico", "Intermedio", "Universitario / Avanzado"])
-    with col2:
-        num_preguntas = st.slider("Cantidad de reactivos:", 3, 10, 5)
-        tiempo_limite = st.slider("Tiempo límite para resolver (minutos):", 1, 30, 10)
-        tipo_preguntas = st.selectbox("Formato de evaluación:", ["Opción múltiple", "Verdadero o Falso", "Preguntas de Desarrollo"])
-
-    if st.button("🚀 Iniciar Evaluación Cronometrada"):
-        if tema_examen:
-            with st.spinner("Generando evaluación y calibrando temporizador estelar..."):
-                prompt_examen = f"Crea un examen cronometrado de {num_preguntas} preguntas tipo '{tipo_preguntas}' sobre '{tema_examen}' con un límite de tiempo de {tiempo_limite} minutos (Dificultad: {dificultad})."
-                respuesta = consultar_gemini(prompt_examen)
-                st.markdown(f"### ⏱️ Evaluación Estelar Activa (Límite: {tiempo_limite} minutos)")
-                st.markdown(respuesta)
-                if activar_voz:
-                    audio_file = generar_audio_ciel(f"Evaluación iniciada. Cuentas con {tiempo_limite} minutos para resolverla.", "audio_examen.mp3")
-                    st.audio(audio_file, format='audio/mp3')
-        else:
-            st.warning("¡Debe especificar el tema de la evaluación!")
+        pregunta_doc = st.text_input("¿Qué parámetro
